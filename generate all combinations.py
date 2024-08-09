@@ -20,16 +20,6 @@ def pick_rooms(rooms:list, no_of_rooms):
                 if student1 == student2:
                     have_existed = True
         return have_existed
-
-def pick_rooms2(rooms:list, no_of_rooms):
-    result = []
-    def check_existed_pupil(room1, room2):
-        have_existed = False
-        for student1 in room1:
-            for student2 in room2:
-                if student1 == student2:
-                    have_existed = True
-        return have_existed
     def backtrack(start, comb):
         if len(comb) == no_of_rooms:
             result.append(comb.copy())
