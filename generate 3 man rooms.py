@@ -46,14 +46,6 @@ class Room:
         return self._students_in_room
 
 room_one = Room(3)
-room_one.add_pupil("Hiiii")
-print(room_one.students_in_room())
-room_one.add_pupil("BBBBB")
-print(room_one.students_in_room())
-room_one.add_pupil("CCCCCCCC")
-print(room_one.students_in_room())
-room_one.add_pupil("DDDDDDDDD")
-print(room_one.students_in_room())
 
 def generate_all_combination(students:list, max_no_of_people):
     result = []
@@ -84,4 +76,6 @@ student_thirteen = Student(ws["B14"].value, ws["C14"].value, ws["D14"].value, ws
 
 students = [student_one.name(),student_two.name(), student_three.name(), student_four.name(), student_five.name(), student_six.name(), student_seven.name(), student_eight.name(), student_nine.name(), student_ten.name(), student_eleven.name(), student_twelve.name(), student_thirteen.name()]
 while students[-1] == None:
-    students.pop() 
+    students.pop()
+
+print(generate_all_combination(generate_all_combination(students,3), 3))

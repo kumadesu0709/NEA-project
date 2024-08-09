@@ -49,4 +49,3 @@ print(students)
 while students[-1] == None:
     students.pop() 
 print(students)
-
