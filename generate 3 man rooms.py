@@ -78,4 +78,4 @@ students = [student_one.name(),student_two.name(), student_three.name(), student
 while students[-1] == None:
     students.pop()
 
-print(generate_all_combination(generate_all_combination(students,3), 3))
+print(generate_all_combination(students,3))
