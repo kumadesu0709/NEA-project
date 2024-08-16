@@ -29,14 +29,18 @@ class Student:
     
     def hated(self):
         return self._hated
+    
+    def __str__(self):
+        return str(self._name)
 
 class rooming:
 
-    def __init__(self, student_in_yeargroup:list, unwanted_pairs:list):
+    def __init__(self, student_in_yeargroup:list, unwanted_pairs:list, minimum_score):
         self._student_in_yeargroup = student_in_yeargroup
         self._unwanted_pairs = unwanted_pairs
         self._rooming_combinations = []
         self._rooming_scores = {}
+        self._minimum_score = minimum_score
     
     def generate_all_combination(self, max_no_of_people):
         result = []
@@ -77,7 +81,7 @@ class rooming:
         backtrack(0,[])
         return result
     
-    def produce_rooming__without_a_type_of_room(self, combs_room_one, combs_room_two):
+    def _produce_rooming__without_a_type_of_room(self, combs_room_one, combs_room_two):
         for comb_room_one in combs_room_one:
                 for comb_room_two in combs_room_two:
                     for room_one in comb_room_one:
@@ -107,13 +111,13 @@ class rooming:
             return combs_three_man_rooms
         
         elif no_of_one_man_room == 0 and no_of_two_man_room > 0 and no_of_three_man_room > 0:
-            self.produce_rooming__without_a_type_of_room(combs_two_man_rooms, combs_three_man_rooms)
+            self._produce_rooming__without_a_type_of_room(combs_two_man_rooms, combs_three_man_rooms)
 
         elif no_of_one_man_room > 0 and no_of_two_man_room == 0 and no_of_three_man_room > 0:
-            self.produce_rooming__without_a_type_of_room(combs_one_man_rooms, combs_three_man_rooms)
+            self._produce_rooming__without_a_type_of_room(combs_one_man_rooms, combs_three_man_rooms)
 
         elif no_of_one_man_room > 0 and no_of_two_man_room > 0 and no_of_three_man_room == 0:
-            self.produce_rooming__without_a_type_of_room(combs_one_man_rooms, combs_two_man_rooms)
+            self._produce_rooming__without_a_type_of_room(combs_one_man_rooms, combs_two_man_rooms)
 
         elif no_of_one_man_room > 0 and no_of_two_man_room > 0 and no_of_three_man_room > 0:
             for comb_one_man_room in combs_one_man_rooms:
@@ -128,26 +132,104 @@ class rooming:
                                         continue
                                     self._rooming_combinations.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
     
-    def check_if_unwanted(self, room:0):
+    def _check_if_unwanted(self, room:list):
 
         is_unwanted = False
 
-        if len(room) == 2:
+        if len(self._unwanted_pairs) == 0:
+            return is_unwanted
+
+        elif len(room) == 2:
             for unwanted_pair in self._unwanted_pairs:
                 if room[0] in unwanted_pair and room[1] in unwanted_pair:
                     is_unwanted = True
         
-        if len(room) == 3:
+        elif len(room) == 3:
             for unwanted_pair in self._unwanted_pairs:
                 if (room[0] in unwanted_pair and room[1] in unwanted_pair) or (room[0] in unwanted_pair and room[2] in unwanted_pair) or (room[1] in unwanted_pair and room[2] in unwanted_pair):
                     is_unwanted = True
 
         return is_unwanted
+    
+    def _give_score_to_room(self,room:list):
 
+        score = 0
+
+        if len(room) == 2:
+
+            if room[0].preferred_one() == room[1].name():
+                score = score + self._minimum_score + 2
+            if room[0].preferred_two() == room[1].name():
+                score = score + self._minimum_score + 1
+            if room[0].preferred_three() == room[1].name():
+                score = score + self._minimum_score
+            if room[0].hated() == room[1]:
+                score = score - 1
+
+
+            if room[1].preferred_one() == room[0].name():
+                score = score + self._minimum_score + 2
+            if room[1].preferred_two() == room[0].name():
+                score = score + self._minimum_score + 1
+            if room[1].preferred_three() == room[0].name():
+                score = score + self._minimum_score
+            if room[1].hated() == room[0].name():
+                score = score - 1
+        
+        if len(room) == 3:
+
+            if room[0].preferred_one() == room[1].name() or room[0].preferred_one == room[2].name():
+                score = score + self._minimum_score + 2
+            if room[0].preferred_two() == room[1].name() or room[0].preferred_two() == room[2].name():
+                score = score + self._minimum_score + 1
+            if room[0].preferred_three() == room[1].name() or room[0].preferred_three() == room[2].name():
+                score = score + self._minimum_score
+            if room[0].hated() == room[1].name() or room[0].hated() == room[2].name():
+                score = score - 1
+
+
+            if room[1].preferred_one() == room[0].name() or room[1].preferred_one() == room[2].name():
+                score = score + self._minimum_score + 2
+            if room[1].preferred_two() == room[0].name() or room[1].preferred_two() == room[2].name():
+                score = score + self._minimum_score + 1
+            if room[1].preferred_three() == room[0].name() or room[1].preferred_three() == room[2].name():
+                score = score + self._minimum_score
+            if room[1].hated() == room[0].name() or room[1].hated() == room[2].name():
+                score = score - 1
+            
+            if room[2].preferred_one() == room[0].name() or room[2].preferred_one() == room[1].name():
+                score = score + self._minimum_score + 2
+            if room[2].preferred_two() == room[0].name() or room[2].preferred_two() == room[1].name():
+                score = score + self._minimum_score + 1
+            if room[2].preferred_three() == room[0].name() or room[2].preferred_three() == room[1].name():
+                score = score + self._minimum_score
+            if room[2].hated() == room[0].name() or room[2].hated() == room[1].name():
+                score = score - 1
+            
+        return score
     
-    
+    def give_score_to_combinations(self):
+        for combination in self._rooming_combinations:
+            need_to_remove = False
+            score = 0
+            room_in_combination = []
+            for x_man_room_combination in combination:
+                for room in x_man_room_combination:
+                    score += self._give_score_to_room(room)
+                    student_in_room = []
+                    for student in room:
+                        student_in_room.append(student.name())
+                    room_in_combination.append(student_in_room)
+                    if self._check_if_unwanted(room):
+                        need_to_remove = True
+            if need_to_remove == False:
+                self._rooming_scores[str(room_in_combination)] = score
+
     def return_rooming(self):
         return self._rooming_combinations
+    
+    def return_scores(self):
+        return self._rooming_scores
     
 
 
@@ -167,9 +249,10 @@ student_eleven = Student(ws["B12"].value, ws["C12"].value, ws["D12"].value, ws["
 student_twelve= Student(ws["B13"].value, ws["C13"].value, ws["D13"].value, ws["E13"].value, ws["F13"].value)
 student_thirteen = Student(ws["B14"].value, ws["C14"].value, ws["D14"].value, ws["E14"].value, ws["F14"].value)
 
-students = [student_one.name(),student_two.name(), student_three.name(), student_four.name(), student_five.name(), student_six.name(), student_seven.name(), student_eight.name(), student_nine.name(), student_ten.name(), student_eleven.name(), student_twelve.name(), student_thirteen.name()]
-while students[-1] == None:
+students = [student_one,student_two, student_three, student_four, student_five, student_six, student_seven, student_eight, student_nine, student_ten, student_eleven, student_twelve, student_thirteen]
+while (students[-1]).name() == None:
     students.pop()
-rooming1 = rooming(students)
-rooming1.produce_roomings(0,1,1)
-print(rooming1.return_rooming())
+rooming1 = rooming(students, [[1,2]],1)
+rooming1.produce_roomings(4,1,0)
+rooming1.give_score_to_combinations()
+print(rooming1.return_scores())
