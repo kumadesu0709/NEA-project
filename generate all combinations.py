@@ -102,5 +102,7 @@ def produce_roomings(no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_m
 
     return result
 
+
+
 pupil = [1,2,3,4,5,6,8,9,10]
-print(produce_roomings(0,3,0,pupil))
+produce_roomings(0,3,0,pupil)
