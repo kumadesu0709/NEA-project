@@ -1,9 +1,9 @@
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 
-#load existing spreadsheet
+
 wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA-project/NEA testing.xlsx")
-#create the actual spreadsheet
+
 ws = wb.active
 
 class Student:
@@ -60,7 +60,7 @@ class rooming:
             if student_one in room_two:
                 return True
         return False
-    
+
     def pick_rooms(self, rooms:list, no_of_rooms:int):
         result = []
         def backtrack(start, comb):
@@ -133,21 +133,22 @@ class rooming:
                                     self._rooming_combinations.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
     
     def _check_if_unwanted(self, room:list):
-
         is_unwanted = False
 
         if len(self._unwanted_pairs) == 0:
             return is_unwanted
 
-        elif len(room) == 2:
+        if len(room) == 2:
             for unwanted_pair in self._unwanted_pairs:
-                if room[0] in unwanted_pair and room[1] in unwanted_pair:
+                if room[0].name() in unwanted_pair and room[1].name() in unwanted_pair:
                     is_unwanted = True
-        
+                    break
+
         elif len(room) == 3:
             for unwanted_pair in self._unwanted_pairs:
-                if (room[0] in unwanted_pair and room[1] in unwanted_pair) or (room[0] in unwanted_pair and room[2] in unwanted_pair) or (room[1] in unwanted_pair and room[2] in unwanted_pair):
+                if (room[0].name() in unwanted_pair and room[1].name() in unwanted_pair) or (room[0].name() in unwanted_pair and room[2].name() in unwanted_pair) or (room[1].name() in unwanted_pair and room[2].name() in unwanted_pair):
                     is_unwanted = True
+                    break
 
         return is_unwanted
     
@@ -224,6 +225,8 @@ class rooming:
                         need_to_remove = True
             if need_to_remove == False:
                 self._rooming_scores[str(room_in_combination)] = score
+        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
+        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:2]}
 
     def return_rooming(self):
         return self._rooming_combinations
@@ -252,7 +255,7 @@ student_thirteen = Student(ws["B14"].value, ws["C14"].value, ws["D14"].value, ws
 students = [student_one,student_two, student_three, student_four, student_five, student_six, student_seven, student_eight, student_nine, student_ten, student_eleven, student_twelve, student_thirteen]
 while (students[-1]).name() == None:
     students.pop()
-rooming1 = rooming(students, [[1,2]],1)
-rooming1.produce_roomings(4,1,0)
+rooming1 = rooming(students, [],1)
+rooming1.produce_roomings(1,1,1)
 rooming1.give_score_to_combinations()
 print(rooming1.return_scores())
