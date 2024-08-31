@@ -39,6 +39,19 @@ def pick_rooms(rooms:list, no_of_rooms:int):
     backtrack(0,[])
     return result
 
+def check_if_comb_is_valid(comb):
+    string_comb = string_comb.replace('[', '')
+    string_comb = string_comb.replace(']','')
+    string_comb = string_comb.replace(' ', '')
+    student_list = list(string_comb.split(","))
+    has_seen = []
+    for student in student_list:
+        if student not in has_seen:
+            has_seen.append(student)
+        else:
+            return False
+    return True
+
 def produce_roomings(no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_man_room:int, pupil_in_yeargroup:list):
 
     one_man_rooms = generate_all_combination(pupil_in_yeargroup,1)
@@ -67,7 +80,8 @@ def produce_roomings(no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_m
                     for three_man_room in comb_three_man_room:
                         if check_existed_pupil(three_man_room, two_man_room):
                             continue
-                        result.append([comb_two_man_room,comb_three_man_room])
+            if check_if_comb_is_valid([comb_two_man_room,comb_three_man_room]):
+                result.append([comb_two_man_room,comb_three_man_room])
 
     elif no_of_one_man_room > 0 and no_of_two_man_room == 0 and no_of_three_man_room > 0:
         for comb_one_man_room in combs_one_man_rooms:
@@ -76,7 +90,8 @@ def produce_roomings(no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_m
                     for three_man_room in comb_three_man_room:
                         if check_existed_pupil(three_man_room, one_man_room):
                             continue
-                        result.append([comb_one_man_room,comb_three_man_room])
+            if check_if_comb_is_valid([comb_one_man_room,comb_three_man_room]):
+                result.append([comb_one_man_room,comb_three_man_room])
 
     elif no_of_one_man_room > 0 and no_of_two_man_room > 0 and no_of_three_man_room == 0:
         for comb_two_man_room in combs_two_man_rooms:
@@ -85,7 +100,8 @@ def produce_roomings(no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_m
                     for one_man_room in comb_one_man_room:
                         if check_existed_pupil(one_man_room, two_man_room):
                             continue
-                        result.append([comb_one_man_room, comb_two_man_room])
+            if check_if_comb_is_valid([comb_one_man_room, comb_two_man_room]):
+                result.append([comb_one_man_room, comb_two_man_room])
 
     elif no_of_one_man_room > 0 and no_of_two_man_room > 0 and no_of_three_man_room > 0:
         for comb_one_man_room in combs_one_man_rooms:
@@ -98,11 +114,10 @@ def produce_roomings(no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_m
                             for three_man_room in comb_three_man_room:
                                 if check_existed_pupil(three_man_room, one_man_room) or check_existed_pupil(two_man_room, three_man_room):
                                     continue
-                                result.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
+            if check_if_comb_is_valid([comb_one_man_room,comb_two_man_room,comb_three_man_room]):
+                result.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
 
     return result
 
-
-
-pupil = [1,2,3,4,5,6,8,9,10]
-print(produce_roomings(0,3,0,pupil))
+pupil = [1,2,3,4,5,6]
+print(pick_rooms(generate_all_combination(pupil,3),1))
