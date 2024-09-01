@@ -330,6 +330,7 @@ class SettingsWindow(qtw.QWidget):
         super().__init__()
         self._unwanted_pairs = []
         self._wanted_pairs = []
+        self._weekly_setting_text = ""
         
         self.vlayout = qtw.QVBoxLayout()
         self.unwanted_pairs_hbox_layout = qtw.QHBoxLayout()
@@ -338,6 +339,7 @@ class SettingsWindow(qtw.QWidget):
         self.wanted_pairs_vbox_layout = qtw.QVBoxLayout()
         self.unwanted_pairs_buttons = qtw.QHBoxLayout()
         self.wanted_pairs_buttons = qtw.QHBoxLayout()
+        self.pairs_display = qtw.QHBoxLayout()
 
         self.amount_of_combination_layout = qtw.QHBoxLayout()
         self.weekly_settings = qtw.QVBoxLayout()
@@ -406,7 +408,6 @@ class SettingsWindow(qtw.QWidget):
         self.unwanted_pairs_vbox_layout.addWidget(self.unwanted_pair_label)
         self.unwanted_pairs_vbox_layout.addLayout(self.unwanted_pairs_hbox_layout)
         self.unwanted_pairs_vbox_layout.addLayout(self.unwanted_pairs_buttons)
-        self.unwanted_pairs_vbox_layout.addWidget(self.unwanted_pair_display)
         self.vlayout.addLayout(self.unwanted_pairs_vbox_layout)
 
         self.wanted_pair_label = qtw.QLabel("Do you have any pairs of students you want to put into the same room?")    
@@ -420,8 +421,8 @@ class SettingsWindow(qtw.QWidget):
         self.add_wanted_pair = qtw.QPushButton("+")
         self.add_wanted_pair.clicked.connect(self.wanted_add_clicked)
         self.wanted_delete = qtw.QPushButton("-")
-        self.wanted_pair_display = qtw.QLabel("")
         self.wanted_delete.clicked.connect(self.wanted_delete_clicked)
+        self.wanted_pair_display = qtw.QLabel("")
         self.wanted_pairs_buttons.addWidget(self.wanted_delete)
         self.wanted_pairs_buttons.addWidget(self.add_wanted_pair)
         self.wanted_pairs_hbox_layout.addWidget(self.wanted_pair_person_one)
@@ -429,8 +430,15 @@ class SettingsWindow(qtw.QWidget):
         self.wanted_pairs_vbox_layout.addWidget(self.wanted_pair_label)
         self.wanted_pairs_vbox_layout.addLayout(self.wanted_pairs_hbox_layout)
         self.wanted_pairs_vbox_layout.addLayout(self.wanted_pairs_buttons)
-        self.wanted_pairs_vbox_layout.addWidget(self.wanted_pair_display)
         self.vlayout.addLayout(self.wanted_pairs_vbox_layout)
+
+        self.pairs_display.addWidget(self.unwanted_pair_display)
+        self.pairs_display.addWidget(self.wanted_pair_display)
+        self.vlayout.addLayout(self.pairs_display)
+
+
+        self.submit_button = qtw.QPushButton("Submit")
+        self.vlayout.addWidget(self.submit_button)
 
 
         self.setLayout(self.vlayout)
@@ -438,7 +446,7 @@ class SettingsWindow(qtw.QWidget):
     def unwanted_add_clicked(self):
         if self.unwanted_pair_person_one.currentText() != "None" and self.unwanted_pair_person_two.currentText() != "None" and (self.unwanted_pair_person_one.currentText() != self.unwanted_pair_person_two.currentText()):
             self._unwanted_pairs.append([self.unwanted_pair_person_one.currentText(),self.unwanted_pair_person_two.currentText()])
-            self.unwanted_combination_text = "The current unwanted pair(s) is/are:"
+            self._unwanted_combination_text = "The current unwanted pair(s) is/are:"
             for unwanted_pair in self._unwanted_pairs:
                 if (f'{unwanted_pair[0]} and {unwanted_pair[1]}') in self._unwanted_combination_text or (f'{unwanted_pair[1]} and {unwanted_pair[0]}') in self._unwanted_combination_text:
                     self._unwanted_pairs.pop()
@@ -476,22 +484,29 @@ class SettingsWindow(qtw.QWidget):
                 self._wanted_combination_text = ""
         for wanted_pair in self._wanted_pairs:
             self._wanted_combination_text += f'\n {wanted_pair[0]} and {wanted_pair[1]}'
-        self.unwanted_pair_display.setText(self._wanted_combination_text)
+        self.wanted_pair_display.setText(self._wanted_combination_text)
     
+    def all_in_same_room_clicked():
+        self._weekly_
+        
+
+
+
+
     def submit_clicked(self):
         if (int(self.amount_of_one_man.currentText()) + int(self.amount_of_two_man.currentText())*2 + int(self.amount_of_three_man.currentText()*3)) != len(self._students):
             qtw.QMessageBox.warning(self, "incorrect number of rooms", "The amount of rooms assigned doesn't match the amount of students. Please double check.", qtw.QMessageBox.StandardButton.Ok)
         else:
             if self.result_window == None:
                 self.close()
-                self.result_window = ResultWindow(self._students, self._unwanted_pairs, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()))
+                self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()))
                 self.result_window.show()
             else:
                 self.result_window.close()
                 self.result_window = None
 
 class ResultWindow(qtw.QWidget):
-    def __init__(self, students, unwanted_pairs, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, amount_of_combinations):
+    def __init__(self, students, unwanted_pairs, wanted_pairs, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, amount_of_combinations):
         super().__init__()
         self._students = students
         self._unwanted_pairs = unwanted_pairs
