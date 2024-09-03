@@ -3,7 +3,7 @@ from openpyxl import load_workbook
 import ast
 
 
-wb = load_workbook("/Users/jamesguan/Downloads/NEA testing (1).xlsx")
+wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA testing.xlsx")
 
 ws = wb.active
 
@@ -126,14 +126,17 @@ class rooming:
         combs_three_man_rooms = self.pick_rooms(three_man_rooms, no_of_three_man_room)
 
         if no_of_two_man_room == 0 and no_of_three_man_room == 0 and no_of_one_man_room > 0:
-            return combs_one_man_rooms
+            for comb in combs_one_man_rooms:
+                self._rooming_combinations.append([comb])
         
         elif no_of_one_man_room == 0 and no_of_three_man_room == 0 and no_of_two_man_room > 0:
-            return combs_two_man_rooms
+            for comb in combs_two_man_rooms:
+                self._rooming_combinations.append([comb])
         
         elif no_of_two_man_room == 0 and no_of_one_man_room == 0 and no_of_three_man_room > 0:
-            return combs_three_man_rooms
-        
+            for comb in combs_three_man_rooms:
+                self._rooming_combinations.append([comb])
+
         elif no_of_one_man_room == 0 and no_of_two_man_room > 0 and no_of_three_man_room > 0:
             self._produce_rooming__without_a_type_of_room(combs_two_man_rooms, combs_three_man_rooms)
 
@@ -244,23 +247,47 @@ class rooming:
     def _clean(self):
 
         rooming_scores_keys = self._rooming_scores.copy()
+        need_to_remove = False
 
-        for key in rooming_scores_keys.keys():
-            if self._check_if_comb_is_valid(key) == False:
-                self._rooming_scores.pop(key)
-
-            combination = ast.literal_eval(key)
-            need_to_remove = True
-            for room in combination:
-                for wanted_pair in self._wanted_pairs:
-                    for unwanted_pair in self._unwanted_pairs:
-                        if set(wanted_pair).issubset(set(room)) == True and set(unwanted_pair).issubset(set(room)) == False:
-                            need_to_remove = False
-
-            if need_to_remove == True:
-                if key in self._rooming_scores.keys():
+        if len(self._wanted_pairs) > 0 and len(self._unwanted_pairs) > 0:
+            for key in rooming_scores_keys.keys():
+                if self._check_if_comb_is_valid(key) == False:
                     self._rooming_scores.pop(key)
 
+                combination = ast.literal_eval(key)
+                need_to_remove = True
+                for room in combination:
+                    for wanted_pair in self._wanted_pairs:
+                        for unwanted_pair in self._unwanted_pairs:
+                            if set(wanted_pair).issubset(set(room)) == True and set(unwanted_pair).issubset(set(room)) == False:
+                                need_to_remove = False
+        
+        elif len(self._wanted_pairs) > 0  and len(self._unwanted_pairs) == 0:
+            for key in rooming_scores_keys.keys():
+                if self._check_if_comb_is_valid(key) == False:
+                    self._rooming_scores.pop(key)
+                combination = ast.literal_eval(key)
+                need_to_remove = True
+                for room in combination:
+                    for wanted_pair in self._wanted_pairs:
+                        if set(wanted_pair).issubset(set(room)) == True:
+                            need_to_remove = False
+        
+        elif len(self._unwanted_pairs) > 0 and len(self._wanted_pairs) == 0:
+            for key in rooming_scores_keys.keys():
+                if self._check_if_comb_is_valid(key) == False:
+                    self._rooming_scores.pop(key)
+                combination = ast.literal_eval(key)
+                need_to_remove = True
+                for room in combination:
+                    for unwanted_pair in self._unwanted_pairs:
+                        if set(unwanted_pair).issubset(set(room)) == True:
+                            need_to_remove = False
+
+        if need_to_remove == True:
+            if key in self._rooming_scores.keys():
+                self._rooming_scores.pop(key)
+    
         self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
         self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
 
@@ -291,8 +318,9 @@ student_thirteen = Student(ws["B14"].value, ws["C14"].value, ws["D14"].value, ws
 students = [student_one,student_two, student_three, student_four, student_five, student_six, student_seven, student_eight, student_nine, student_ten, student_eleven, student_twelve, student_thirteen]
 while (students[-1]).name() == None:
     students.pop()
-rooming1 = rooming(students, ['Felix','Ellen'], [['Andrew','Beany']], "a", 15)
+rooming1 = rooming(students, [], [], "a", 100)
 rooming1.produce_roomings(1,1,1)
 rooming1.give_score_to_combinations()
 print(rooming1.return_scores())
+
 
