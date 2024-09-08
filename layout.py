@@ -421,6 +421,8 @@ class SettingsWindow(qtw.QWidget):
 
         self.time_warning_label = qtw.QLabel("Some certain combination of rooms could be extremely slow due to the amount of combinations generated. Would you like to speed up the calculation process? This may not produce the best results.")
         self.time_warning_check_box = qtw.QCheckBox("Speed up the process.")
+        self.vlayout.addWidget(self.time_warning_label)
+        self.vlayout.addWidget(self.time_warning_check_box)
 
 
 
@@ -548,14 +550,14 @@ class SettingsWindow(qtw.QWidget):
                     qtw.QMessageBox.warning(self, "incorrect number of rooms", "There are more than three weekly boarders in this year group. Please choose another option.", qtw.QMessageBox.StandardButton.Ok)
                 else:
                     self.close()
-                    self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_setting_text, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()))
+                    self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_setting_text, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()), self.time_warning_check_box.isChecked())
                     self.result_window.show()
             else:
                 self.result_window.close()
                 self.result_window = None
 
 class ResultWindow(qtw.QWidget):
-    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, amount_of_combinations):
+    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, amount_of_combinations, speed_up_calc):
         super().__init__()
         self.setWindowTitle("Results")
         self.result_layout = qtw.QVBoxLayout()
@@ -569,7 +571,7 @@ class ResultWindow(qtw.QWidget):
         self._amount_of_combinations = amount_of_combinations
         self._rooming = rooming(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_settings, self._amount_of_combinations)
         self._rooming.produce_roomings(self._amount_of_one_man_rooms,self._amount_of_two_man_rooms,self._amount_of_three_man_rooms)
-        self._rooming.give_score_to_combinations()
+        self._rooming.give_score_to_combinations(speed_up_calc)
         label = ""
         combination_no = 1
         for key in self._rooming.return_scores().keys():
