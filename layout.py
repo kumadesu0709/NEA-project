@@ -1,8 +1,10 @@
 import PyQt6.QtWidgets as qtw
+from PyQt6.QtGui import * 
 import sys
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 import ast
+import random
 
 class Student:
 
@@ -55,7 +57,8 @@ class rooming:
 
         self._weekly_boarders_setting = weekly_boarder_setting
         if self._weekly_boarders_setting == "Put all the weekly boarders into the same room":
-            self._wanted_pairs.append([self._weekly_boarders])
+            if len(self._weekly_boarders) <= 3:
+                self._wanted_pairs.append([self._weekly_boarders])
         elif self._weekly_boarders_setting == "Pair each of them with a full boarder":
             for i in range (len(self._weekly_boarders)):
                 for j in range (i+1, len(self._weekly_boarders)):
@@ -154,23 +157,16 @@ class rooming:
                                     if self._check_existed_pupil(three_man_room, one_man_room) or self._check_existed_pupil(two_man_room, three_man_room):
                                         continue
                                     self._rooming_combinations.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
-        
-        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
-        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
+
     
-    def _check_if_comb_is_valid(self, string_comb):
-        string_comb = string_comb.replace('[', '')
-        string_comb = string_comb.replace(']','')
-        string_comb = string_comb.replace(' ', '')
-        student_list = list(string_comb.split(","))
-        has_seen = []
-        for student in student_list:
-            if student not in has_seen:
-                has_seen.append(student)
-            else:
-                return False
-        return True
-        
+    def _randomly_pick_combination(self, amount_of_combination):
+        result = []
+        random_locations = random.sample(range(len(self._rooming_combinations)),amount_of_combination)
+        for location in random_locations:
+            result.append(self._rooming_combinations[location])
+        self._rooming_combinations = result
+            
+
     def _give_score_to_room(self,room:list):
 
         score = 0
@@ -209,18 +205,18 @@ class rooming:
 
 
             if room[1].preferred_one() == room[0].name() or room[1].preferred_one() == room[2].name():
-                score = score + 3
+                score = score + 5
             if room[1].preferred_two() == room[0].name() or room[1].preferred_two() == room[2].name():
-                score = score + 2
+                score = score + 3
             if room[1].preferred_three() == room[0].name() or room[1].preferred_three() == room[2].name():
                 score = score + 1
             if room[1].hated() == room[0].name() or room[1].hated() == room[2].name():
                 score = score - 1
             
             if room[2].preferred_one() == room[0].name() or room[2].preferred_one() == room[1].name():
-                score = score + 3
+                score = score + 5
             if room[2].preferred_two() == room[0].name() or room[2].preferred_two() == room[1].name():
-                score = score + 2
+                score = score + 3
             if room[2].preferred_three() == room[0].name() or room[2].preferred_three() == room[1].name():
                 score = score + 1
             if room[2].hated() == room[0].name() or room[2].hated() == room[1].name():
@@ -228,7 +224,9 @@ class rooming:
             
         return score
     
-    def give_score_to_combinations(self):
+    def give_score_to_combinations(self,randomly_pick_room_on:bool):
+        if randomly_pick_room_on == True:
+            self._randomly_pick_combination(500)
         for combination in self._rooming_combinations:
             score = 0
             rooms_in_combination = []
@@ -278,6 +276,9 @@ class rooming:
         if need_to_remove == True:
             if key in self._rooming_scores.keys():
                 self._rooming_scores.pop(key)
+        
+        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
+        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
 
     def return_rooming(self):
         return self._rooming_combinations
@@ -371,6 +372,8 @@ class SettingsWindow(qtw.QWidget):
         self.amount_of_combination_layout = qtw.QHBoxLayout()
         self.weekly_settings = qtw.QVBoxLayout()
         self.room_settings = qtw.QGridLayout()
+
+
         self._students = students
         self.result_window = None
         self._unwanted_combination_text = ""
@@ -415,6 +418,9 @@ class SettingsWindow(qtw.QWidget):
         self.weekly_settings.addWidget(self.put_them_in_pairs)
         self.weekly_settings.addWidget(self.do_nothing)
         self.vlayout.addLayout(self.weekly_settings)
+
+        self.time_warning_label = qtw.QLabel("Some certain combination of rooms could be extremely slow due to the amount of combinations generated. Would you like to speed up the calculation process? This may not produce the best results.")
+        self.time_warning_check_box = qtw.QCheckBox("Speed up the process.")
 
 
 
@@ -495,7 +501,6 @@ class SettingsWindow(qtw.QWidget):
             self._unwanted_combination_text += f'\n {unwanted_pair[0]} and {unwanted_pair[1]}'
         self.unwanted_pair_display.setText(self._unwanted_combination_text)
 
-
     def wanted_add_clicked(self):
         if self.wanted_pair_person_one.currentText() != "None" and self.wanted_pair_person_two.currentText() != "None" and (self.wanted_pair_person_one.currentText() != self.wanted_pair_person_two.currentText()):
             self._wanted_pairs.append([self.wanted_pair_person_one.currentText(),self.wanted_pair_person_two.currentText()])
@@ -529,13 +534,22 @@ class SettingsWindow(qtw.QWidget):
     def submit_clicked(self):
         no_of_people_due_to_assign_room = int(self.amount_of_one_man.currentText()) + (int(self.amount_of_two_man.currentText())*2) + (int(self.amount_of_three_man.currentText())*3)
         if no_of_people_due_to_assign_room != len(self._students):
-            print(no_of_people_due_to_assign_room)
             qtw.QMessageBox.warning(self, "incorrect number of rooms", "The amount of rooms assigned doesn't match the amount of students. Please double check.", qtw.QMessageBox.StandardButton.Ok)
+        elif self.amount_of_combinations.text() == "":
+            qtw.QMessageBox.warning(self, "empty combination", "Please enter the amount of combination needed.", qtw.QMessageBox.StandardButton.Ok)
+
         else:
             if self.result_window == None:
-                self.close()
-                self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_setting_text, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()))
-                self.result_window.show()
+                amount_of_weekly = 0
+                for student in self._students:
+                    if student.is_weekly():
+                        amount_of_weekly += 1
+                if amount_of_weekly > 3 and self._weekly_setting_text == "Put all the weekly boarders into the same room":
+                    qtw.QMessageBox.warning(self, "incorrect number of rooms", "There are more than three weekly boarders in this year group. Please choose another option.", qtw.QMessageBox.StandardButton.Ok)
+                else:
+                    self.close()
+                    self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_setting_text, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()))
+                    self.result_window.show()
             else:
                 self.result_window.close()
                 self.result_window = None
@@ -557,18 +571,26 @@ class ResultWindow(qtw.QWidget):
         self._rooming.produce_roomings(self._amount_of_one_man_rooms,self._amount_of_two_man_rooms,self._amount_of_three_man_rooms)
         self._rooming.give_score_to_combinations()
         label = ""
+        combination_no = 1
         for key in self._rooming.return_scores().keys():
-            i = 1
+            room_no = 1
+            label += f"combination {combination_no}:\n \n"
+            combination_no += 1
             for room in ast.literal_eval(key):
-                label += f'Room{i}: '
-                i += 1
+                label += f'Room {room_no}: '
+                room_no += 1
                 for student in room:
-                    label += student
-                label += "\n"
+                    label += f'{student}, '
+                label = label[:-2]
+                label += "     "
+            label += f'Score: {self._rooming.return_scores()[key]}'
+            label += "\n"
+            label += "\n"
         self.room_label = qtw.QLabel(label)
         print(label)
         self.result_layout.addWidget(self.room_label)
         self.setLayout(self.result_layout)
+
 
 
 app = qtw.QApplication([])

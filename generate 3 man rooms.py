@@ -3,7 +3,7 @@ from openpyxl import load_workbook
 import ast
 
 
-wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA testing.xlsx")
+wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA testing (2).xlsx")
 
 ws = wb.active
 
@@ -319,7 +319,7 @@ students = [student_one,student_two, student_three, student_four, student_five, 
 while (students[-1]).name() == None:
     students.pop()
 rooming1 = rooming(students, [], [], "a", 100)
-rooming1.produce_roomings(1,1,1)
+rooming1.produce_roomings(0,2,2)
 rooming1.give_score_to_combinations()
 print(rooming1.return_scores())
 
