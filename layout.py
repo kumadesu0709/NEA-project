@@ -1,10 +1,10 @@
+import random
 import PyQt6.QtWidgets as qtw
 from PyQt6.QtGui import * 
 import sys
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 import ast
-import random
 
 class Student:
 
@@ -572,20 +572,69 @@ class ResultWindow(qtw.QWidget):
         self._rooming = rooming(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_settings, self._amount_of_combinations)
         self._rooming.produce_roomings(self._amount_of_one_man_rooms,self._amount_of_two_man_rooms,self._amount_of_three_man_rooms)
         self._rooming.give_score_to_combinations(speed_up_calc)
+        
         self._rooming_scores = list(self._rooming.return_scores().keys())
+        
         self.combination_layout = qtw.QVBoxLayout()
         self.back_and_next_layout = qtw.QHBoxLayout()
+        
         self._start_with = 0
         if len(self._rooming_scores) > 11:
             self._end_with = 10
         else:
             self._end_with = len(self._rooming_scores)
+        
         self._combination_no = 1
+        
+        self.create_combination_layout()
+
+        if len(self._rooming_scores) > 10:
+            self.next_page_button = qtw.QPushButton(">")
+            self.back_page_button = qtw.QPushButton("<")
+            self.next_page_button.clicked.connect(self.next_clicked)
+            self.back_page_button.clicked.connect(self.back_clicked)
+            self.back_and_next_layout.addWidget(self.back_page_button)
+            self.back_and_next_layout.addWidget(self.next_page_button)
+
+        self.result_layout.addLayout(self.combination_layout)
+        self.result_layout.addLayout(self.back_and_next_layout)
+        self.setLayout(self.result_layout)
+
+    def next_clicked(self):
+        if self._combination_no < len(self._rooming_scores):
+            for i in reversed(range(self.combination_layout.count())): 
+                self.combination_layout.itemAt(i).widget().setParent(None)
+            if (self._start_with + 10) < len(self._rooming_scores)+1:
+                self._start_with = self._start_with + 10
+            if (self._end_with + 10) < len(self._rooming_scores):
+                self._end_with = self._end_with + 10
+            else:
+                self._end_with = len(self._rooming_scores)
+            self.create_combination_layout()
+    
+    def back_clicked(self):
+        for i in reversed(range(self.combination_layout.count())): 
+            self.combination_layout.itemAt(i).widget().setParent(None)
+        if (self._start_with - 10) > 0:
+            self._start_with = self._start_with - 10
+        else:
+            self._start_with = 0
+        self._end_with = (self._start_with + 10)
+        if (self._combination_no - 20) > 1:
+            self._combination_no = self._combination_no - 20
+        else:
+            self._combination_no = 1
+        self.create_combination_layout()
+    
+    def create_combination_layout(self):
+        self._combination_numbers = ["x","x","x","x","x","x","x","x","x","x"]
+        position = 0
+        self._room_labels = ["x","x","x","x","x","x","x","x","x","x"]
         for key in (self._rooming_scores[self._start_with:self._end_with]):
             label = ""
             room_no = 1
-            self.combination_number = qtw.QLabel(f"combination {self._combination_no}:")
-            self.combination_layout.addWidget(self.combination_number)
+            combination_number = f"combination {self._combination_no}:"
+            self._combination_numbers[position] = combination_number
             self._combination_no += 1
             for room in ast.literal_eval(key):
                 label += f'Room {room_no}: '
@@ -595,46 +644,77 @@ class ResultWindow(qtw.QWidget):
                 label = label[:-2]
                 label += "     "
             label += f'Score: {self._rooming.return_scores()[key]}'
-            self.rooms_and_combination = qtw.QPushButton(label)
-            self.combination_layout.addWidget(self.rooms_and_combination)
-        self.result_layout.addLayout(self.combination_layout)
-
-        if len(self._rooming_scores) > 10:
-            self.next_page_button = qtw.QPushButton(">")
-            self.back_page_button = qtw.QPushButton("<")
-            self.next_page_button.clicked.connect(self.next_clicked)
-            self.back_and_next_layout.addWidget(self.back_page_button)
-            self.back_and_next_layout.addWidget(self.next_page_button)
-
-        self.result_layout.addLayout(self.combination_layout)
-        self.result_layout.addLayout(self.back_and_next_layout)
-        self.setLayout(self.result_layout)
-
-        def next_clicked(self):
-            self.combination_layout = qtw.QVBoxLayout()
-            self._start_with = self._end_with
-            if (self._end_with + 10) < len(self._rooming_scores):
-                self._end_with = self._end_with + 10
-            else:
-                self._end_with = len(self._rooming_scores)
-            for key in (self._rooming_scores[self._start_with:self._end_with]):
-                label = ""
-                room_no = 1
-                self.combination_number = qtw.QLabel(f"combination {self._combination_no}:")
-                self.combination_layout.addWidget(self.combination_number)
-                self._combination_no += 1
-                for room in ast.literal_eval(key):
-                    label += f'Room {room_no}: '
-                    room_no += 1
-                    for student in room:
-                        label += f'{student}, '
-                    label = label[:-2]
-                    label += "     "
-                label += f'Score: {self._rooming.return_scores()[key]}'
-                self.rooms_and_combination = qtw.QPushButton(label)
-                self.combination_layout.addWidget(self.rooms_and_combination)
-            self.result_layout.addLayout(self.combination_layout)
+            self._room_labels[position] = label
+            position += 1
+        
+        while "x" in self._combination_numbers:
+            self._combination_numbers.remove("x")
             
+        self.rooms_and_combination_one = qtw.QPushButton(self._room_labels[0])
+        self.rooms_and_combination_one.clicked.connect(self.combination_one_clicked)
+        self.rooms_and_combination_two = qtw.QPushButton(self._room_labels[1])
+        self.rooms_and_combination_two.clicked.connect(self.combination_two_clicked)
+        self.rooms_and_combination_three = qtw.QPushButton(self._room_labels[2])
+        self.rooms_and_combination_three.clicked.connect(self.combination_three_clicked)
+        self.rooms_and_combination_four = qtw.QPushButton(self._room_labels[3])
+        self.rooms_and_combination_four.clicked.connect(self.combination_four_clicked)
+        self.rooms_and_combination_five = qtw.QPushButton(self._room_labels[4])
+        self.rooms_and_combination_five.clicked.connect(self.combination_five_clicked)
+        self.rooms_and_combination_six = qtw.QPushButton(self._room_labels[5])
+        self.rooms_and_combination_six.clicked.connect(self.combination_six_clicked)
+        self.rooms_and_combination_seven = qtw.QPushButton(self._room_labels[6])
+        self.rooms_and_combination_seven.clicked.connect(self.combination_seven_clicked)
+        self.rooms_and_combination_eight = qtw.QPushButton(self._room_labels[7])
+        self.rooms_and_combination_eight.clicked.connect(self.combination_eight_clicked)
+        self.rooms_and_combination_nine = qtw.QPushButton(self._room_labels[8])
+        self.rooms_and_combination_nine.clicked.connect(self.combination_nine_clicked)
+        self.rooms_and_combination_ten = qtw.QPushButton(self._room_labels[9])
+        self.rooms_and_combination_ten.clicked.connect(self.combination_ten_clicked)
+        
+        rooms_and_combination_buttons = [self.rooms_and_combination_one, self.rooms_and_combination_two, self.rooms_and_combination_three, self.rooms_and_combination_four, self.rooms_and_combination_five, self.rooms_and_combination_six, self.rooms_and_combination_seven, self.rooms_and_combination_eight, self.rooms_and_combination_nine, self.rooms_and_combination_ten]
+        for i in range (0, len(self._combination_numbers)):
+            self.combination_layout.addWidget(qtw.QLabel(self._combination_numbers[i]))
+            self.combination_layout.addWidget(rooms_and_combination_buttons[i])
+            
+        self.result_layout.addLayout(self.combination_layout)
+    
+    def combination_one_clicked(self):
+        print(self.rooms_and_combination_one.text())
+    
+    def combination_two_clicked(self):
+        print(self.rooms_and_combination_two.text())
+    
+    def combination_three_clicked(self):
+        print(self.rooms_and_combination_three.text())
+
+    def combination_four_clicked(self):
+        print(self.rooms_and_combination_four.text())
+
+    def combination_five_clicked(self):
+        print(self.rooms_and_combination_five.text())
+    
+    def combination_six_clicked(self):
+        print(self.rooms_and_combination_six.text())
+    
+    def combination_seven_clicked(self):
+        print(self.rooms_and_combination_seven.text())
+    
+    def combination_eight_clicked(self):
+        print(self.rooms_and_combination_eight.text())
+
+    def combination_nine_clicked(self):
+        print(self.rooms_and_combination_nine.text())
+
+    def combination_ten_clicked(self):
+        print(self.rooms_and_combination_ten.text())
+        
+class EditWindow(qtw.QWidget):
+    def __init__ (self, students, amount_of_rooms):
+        super().__init__()
+        self._students = students
+        self._amount_of_rooms = amount_of_rooms
+        
+        
 
 
 
