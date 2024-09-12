@@ -1,6 +1,7 @@
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 import ast
+import random
 
 
 wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA testing (2).xlsx")
@@ -58,7 +59,8 @@ class rooming:
 
         self._weekly_boarders_setting = weekly_boarder_setting
         if self._weekly_boarders_setting == "Put all the weekly boarders into the same room":
-            self._wanted_pairs.append([self._weekly_boarders])
+            if len(self._weekly_boarders) <= 3:
+                self._wanted_pairs.append([self._weekly_boarders])
         elif self._weekly_boarders_setting == "Pair each of them with a full boarder":
             for i in range (len(self._weekly_boarders)):
                 for j in range (i+1, len(self._weekly_boarders)):
@@ -111,8 +113,7 @@ class rooming:
                     for room_two in comb_room_two:
                         if self._check_existed_pupil(room_one, room_two):
                             continue
-                        if self._check_if_comb_is_valid(f'{str(comb_room_one)}{str(comb_room_two)}'):
-                            self._rooming_combinations.append([comb_room_one, comb_room_two])
+                        self._rooming_combinations.append([comb_room_one, comb_room_two])
 
     
     def produce_roomings(self, no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_man_room:int):
@@ -157,22 +158,17 @@ class rooming:
                                 for three_man_room in comb_three_man_room:
                                     if self._check_existed_pupil(three_man_room, one_man_room) or self._check_existed_pupil(two_man_room, three_man_room):
                                         continue
-                                    if self._check_if_comb_is_valid(f'{str(comb_one_man_room)}{str(comb_two_man_room)}{str(comb_three_man_room)}'):
-                                        self._rooming_combinations.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
+                                    self._rooming_combinations.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
+
     
-    def _check_if_comb_is_valid(self, string_comb):
-        string_comb = string_comb.replace('[', '')
-        string_comb = string_comb.replace(']','')
-        string_comb = string_comb.replace(' ', '')
-        student_list = list(string_comb.split(","))
-        has_seen = []
-        for student in student_list:
-            if student not in has_seen:
-                has_seen.append(student)
-            else:
-                return False
-        return True
-        
+    def _randomly_pick_combination(self, amount_of_combination):
+        result = []
+        random_locations = random.sample(range(len(self._rooming_combinations)),amount_of_combination)
+        for location in random_locations:
+            result.append(self._rooming_combinations[location])
+        self._rooming_combinations = result
+            
+
     def _give_score_to_room(self,room:list):
 
         score = 0
@@ -211,18 +207,18 @@ class rooming:
 
 
             if room[1].preferred_one() == room[0].name() or room[1].preferred_one() == room[2].name():
-                score = score + 3
+                score = score + 5
             if room[1].preferred_two() == room[0].name() or room[1].preferred_two() == room[2].name():
-                score = score + 2
+                score = score + 3
             if room[1].preferred_three() == room[0].name() or room[1].preferred_three() == room[2].name():
                 score = score + 1
             if room[1].hated() == room[0].name() or room[1].hated() == room[2].name():
                 score = score - 1
             
             if room[2].preferred_one() == room[0].name() or room[2].preferred_one() == room[1].name():
-                score = score + 3
+                score = score + 5
             if room[2].preferred_two() == room[0].name() or room[2].preferred_two() == room[1].name():
-                score = score + 2
+                score = score + 3
             if room[2].preferred_three() == room[0].name() or room[2].preferred_three() == room[1].name():
                 score = score + 1
             if room[2].hated() == room[0].name() or room[2].hated() == room[1].name():
@@ -230,7 +226,9 @@ class rooming:
             
         return score
     
-    def give_score_to_combinations(self):
+    def give_score_to_combinations(self,randomly_pick_room_on:bool):
+        if randomly_pick_room_on == True:
+            self._randomly_pick_combination(500)
         for combination in self._rooming_combinations:
             score = 0
             rooms_in_combination = []
@@ -251,9 +249,6 @@ class rooming:
 
         if len(self._wanted_pairs) > 0 and len(self._unwanted_pairs) > 0:
             for key in rooming_scores_keys.keys():
-                if self._check_if_comb_is_valid(key) == False:
-                    self._rooming_scores.pop(key)
-
                 combination = ast.literal_eval(key)
                 need_to_remove = True
                 for room in combination:
@@ -264,8 +259,6 @@ class rooming:
         
         elif len(self._wanted_pairs) > 0  and len(self._unwanted_pairs) == 0:
             for key in rooming_scores_keys.keys():
-                if self._check_if_comb_is_valid(key) == False:
-                    self._rooming_scores.pop(key)
                 combination = ast.literal_eval(key)
                 need_to_remove = True
                 for room in combination:
@@ -275,8 +268,6 @@ class rooming:
         
         elif len(self._unwanted_pairs) > 0 and len(self._wanted_pairs) == 0:
             for key in rooming_scores_keys.keys():
-                if self._check_if_comb_is_valid(key) == False:
-                    self._rooming_scores.pop(key)
                 combination = ast.literal_eval(key)
                 need_to_remove = True
                 for room in combination:
@@ -287,7 +278,7 @@ class rooming:
         if need_to_remove == True:
             if key in self._rooming_scores.keys():
                 self._rooming_scores.pop(key)
-    
+        
         self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
         self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
 
@@ -319,8 +310,8 @@ students = [student_one,student_two, student_three, student_four, student_five, 
 while (students[-1]).name() == None:
     students.pop()
 rooming1 = rooming(students, [], [], "a", 100)
-rooming1.produce_roomings(0,2,2)
-rooming1.give_score_to_combinations()
+rooming1.produce_roomings(0,5,0)
+rooming1.give_score_to_combinations(True)
 print(rooming1.return_scores())
 
 
