@@ -1,10 +1,12 @@
 import random
 import PyQt6.QtWidgets as qtw
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import * 
 import sys
 from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 import ast
+
 
 class Student:
 
@@ -559,7 +561,12 @@ class ResultWindow(qtw.QWidget):
         super().__init__()
         self.setWindowTitle("Results")
         self.result_layout = qtw.QVBoxLayout()
+        self.reminder_label = qtw.QLabel('Click the combination to select the combination, or click "Create Own Combination" to create your own combination')
+        self.reminder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.result_layout.addWidget(self.reminder_label)
+        
         self.settings_window = None
+        self.edit_window = None
         self._students = students
         self._unwanted_pairs = unwanted_pairs
         self._wanted_pairs = wanted_pairs
@@ -572,8 +579,12 @@ class ResultWindow(qtw.QWidget):
         self._rooming.produce_roomings(self._amount_of_one_man_rooms,self._amount_of_two_man_rooms,self._amount_of_three_man_rooms)
         self._rooming.give_score_to_combinations(speed_up_calc)
         self._rooming_scores = self._rooming.return_scores()
-        self._combination_numbers = ["x"]*(amount_of_combinations + 10)
-        self._room_labels = ["x"]*(amount_of_combinations + 10)
+        if self._amount_of_combinations > len(self._rooming_scores):
+            self._combination_numbers = ["x"]*(amount_of_combinations + 10)
+            self._room_labels = ["x"]*(amount_of_combinations + 10)
+        else:
+            self._combination_numbers = ["x"]*(len(self._rooming_scores) + 10)
+            self._room_labels = ["x"]*(len(self._rooming_scores) + 10)
         self._ranking_rooms = {}
         
         position = 0
@@ -613,6 +624,7 @@ class ResultWindow(qtw.QWidget):
         self.create_combination_layout()
         
         self.create_own_combination = qtw.QPushButton("Create Own Combination")
+        self.create_own_combination.clicked.connect(self.create_own_combination_clicked)
         self.back_to_settings = qtw.QPushButton("Back to Settings")
         self.back_to_settings.clicked.connect(self.back_to_settings_clicked)
 
@@ -750,22 +762,133 @@ class ResultWindow(qtw.QWidget):
         else:
             self.settings_window.close()
             self.settings_window = None
+    
+    def create_own_combination_clicked(self):
+        
+        if self.edit_window == None:
+            self.edit_window = EditWindow(self._students, self._amount_of_one_man_rooms, self._amount_of_two_man_rooms, self._amount_of_three_man_rooms)
+            self.edit_window.show()
+        else:
+            self.edit_window.close()
+            self.edit_window = None
+        
             
             
             
         
         
 class EditWindow(qtw.QWidget):
-    def __init__ (self, students, amount_of_rooms):
+    def __init__ (self, students, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms):
+        
         super().__init__()
+        
         self._students = students
-        self._amount_of_rooms = amount_of_rooms
+        self._amount_of_one_man_rooms = amount_of_one_man_rooms
+        self._amount_of_two_man_rooms = amount_of_two_man_rooms
+        self._amount_of_three_man_rooms = amount_of_three_man_rooms
+        
+        self.room_one_combo_box = qtw.QComboBox()
+        self.room_two_combo_box = qtw.QComboBox()
+        self.room_three_combo_box = qtw.QComboBox()
+        self.room_four_combo_box = qtw.QComboBox()
+        self.room_five_combo_box = qtw.QComboBox()
+        self.room_six_combo_box = qtw.QComboBox()
+        self.room_seven_combo_box = qtw.QComboBox()
+        self.room_eight_combo_box = qtw.QComboBox()
+        self.room_nine_combo_box = qtw.QComboBox()
+        self.room_ten_combo_box = qtw.QComboBox()
+        self.room_eleven_combo_box = qtw.QComboBox()
+        self.room_twelve_combo_box = qtw.QComboBox()
+        self.room_thirteen_combo_box = qtw.QComboBox()
+        
+        room_combo_boxes = [self.room_one_combo_box,self.room_two_combo_box,self.room_three_combo_box,self.room_four_combo_box,self.room_five_combo_box,self.room_six_combo_box,self.room_seven_combo_box,self.room_eight_combo_box,self.room_nine_combo_box,self.room_ten_combo_box, self.room_eleven_combo_box, self.room_twelve_combo_box, self.room_thirteen_combo_box]
+        #room_combo_boxes = room_combo_boxes[0:(len(self._students)+1)]
+        
+        self.edit_layout = qtw.QHBoxLayout()
+        
+        for combo_box in room_combo_boxes:
+            for student in students:
+                combo_box.addItem(student.name())
+        
+        room_labels = []
+        
+        for i in range (1, (self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms+1)):
+            room_labels.append(qtw.QLabel(f"Room {i}"))
+        for label in room_labels:
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         
+        self.combo_box_layout_one = qtw.QHBoxLayout()
+        self.combo_box_layout_two = qtw.QHBoxLayout()
+        self.combo_box_layout_three = qtw.QHBoxLayout()
+        self.combo_box_layout_four = qtw.QHBoxLayout()
+        self.combo_box_layout_five = qtw.QHBoxLayout()
+        self.combo_box_layout_six = qtw.QHBoxLayout()
+        self.combo_box_layout_seven = qtw.QHBoxLayout()
+        self.combo_box_layout_eight = qtw.QHBoxLayout()
+        self.combo_box_layout_nine = qtw.QHBoxLayout()
+        self.combo_box_layout_ten = qtw.QHBoxLayout()
+        self.combo_box_layout_eleven = qtw.QHBoxLayout()
+        self.combo_box_layout_twelve = qtw.QHBoxLayout()
+        self.combo_box_layout_thirteen = qtw.QHBoxLayout()
         
+        combo_box_layouts = [self.combo_box_layout_one, self.combo_box_layout_two, self.combo_box_layout_three, self.combo_box_layout_four, self.combo_box_layout_five, self.combo_box_layout_six, self.combo_box_layout_seven, self.combo_box_layout_eight, self.combo_box_layout_nine, self.combo_box_layout_ten, self.combo_box_layout_eleven, self.combo_box_layout_twelve, self.combo_box_layout_thirteen]
+        #combo_box_layouts = combo_box_layouts[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms)]
+        
+        combo_box_layout_number = 0
+        combo_box_number = 0
+        
+        for i in range(self._amount_of_one_man_rooms):
+            
+            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layout_number += 1
+            combo_box_number += 1
+        
+        for i in range(self._amount_of_two_man_rooms):
+            
+            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_number += 1
+            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_number += 1
+            
+            combo_box_layout_number += 1
+        
+        for i in range(self._amount_of_three_man_rooms):
+            
+            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_number += 1
+            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_number += 1
+            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_number += 1
+            
+            combo_box_layout_number += 1
+        
+        self.room_layout_one = qtw.QVBoxLayout()
+        self.room_layout_two = qtw.QVBoxLayout()
+        self.room_layout_three = qtw.QVBoxLayout()
+        self.room_layout_four = qtw.QVBoxLayout()
+        self.room_layout_five = qtw.QVBoxLayout()
+        self.room_layout_six = qtw.QVBoxLayout()
+        self.room_layout_seven = qtw.QVBoxLayout()
+        self.room_layout_eight = qtw.QVBoxLayout()
+        self.room_layout_nine = qtw.QVBoxLayout()
+        self.room_layout_ten = qtw.QVBoxLayout()
+        self.room_layout_eleven = qtw.QVBoxLayout()
+        self.room_layout_twelve = qtw.QVBoxLayout()
+        self.room_layout_thirteen = qtw.QVBoxLayout()
+        
+        room_layouts = [self.room_layout_one, self.room_layout_two, self.room_layout_three, self.room_layout_four, self.room_layout_five, self.room_layout_six, self.room_layout_seven, self.room_layout_eight, self.room_layout_nine, self.room_layout_ten, self.room_layout_eleven, self.room_layout_twelve, self.room_layout_thirteen]
+        room_layouts = room_layouts[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms)]
+        
+        for i in range((self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms)):
+            room_layouts[i].addWidget(room_labels[i])
+            room_layouts[i].addLayout(combo_box_layouts[i])
+        
+        for room_layout in room_layouts:
+            self.edit_layout.addLayout(room_layout)
 
-
-
+        self.setLayout(self.edit_layout)
 
 
 app = qtw.QApplication([])
