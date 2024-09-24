@@ -161,12 +161,13 @@ class rooming:
                                     self._rooming_combinations.append([comb_one_man_room,comb_two_man_room,comb_three_man_room])
 
     
-    def _randomly_pick_combination(self, amount_of_combination):
+    def _randomly_pick_combination(self):
         result = []
-        random_locations = random.sample(range(len(self._rooming_combinations)),amount_of_combination)
-        for location in random_locations:
-            result.append(self._rooming_combinations[location])
-        self._rooming_combinations = result
+        if len(self._rooming_combinations) > 100000:
+            random_locations = random.sample(range(len(self._rooming_combinations)), (len(self._rooming_combinations)//2000))
+            for location in random_locations:
+                result.append(self._rooming_combinations[location])
+            self._rooming_combinations = result
             
 
     def _give_score_to_room(self,room:list):
@@ -228,7 +229,7 @@ class rooming:
     
     def give_score_to_combinations(self,randomly_pick_room_on:bool):
         if randomly_pick_room_on == True:
-            self._randomly_pick_combination(500)
+            self._randomly_pick_combination()
         for combination in self._rooming_combinations:
             score = 0
             rooms_in_combination = []
@@ -649,8 +650,10 @@ class ResultWindow(qtw.QWidget):
         if self._combination_no < len(self._rooming_scores):
             for i in reversed(range(self.combination_layout.count())): 
                 self.combination_layout.itemAt(i).widget().setParent(None)
-            if (self._start_with + 10) < len(self._rooming_scores)+1:
+
+            if self._end_with != len(self._rooming_scores) and (self._start_with + 10) < len(self._rooming_scores):
                 self._start_with = self._start_with + 10
+            
             if (self._end_with + 10) < len(self._rooming_scores):
                 self._end_with = self._end_with + 10
             else:
@@ -781,11 +784,13 @@ class EditWindow(qtw.QWidget):
     def __init__ (self, students, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms):
         
         super().__init__()
+        self.setWindowTitle("Create Own Combination")
         
         self._students = students
         self._amount_of_one_man_rooms = amount_of_one_man_rooms
         self._amount_of_two_man_rooms = amount_of_two_man_rooms
         self._amount_of_three_man_rooms = amount_of_three_man_rooms
+        
         
         self.room_one_combo_box = qtw.QComboBox()
         self.room_two_combo_box = qtw.QComboBox()
@@ -801,12 +806,12 @@ class EditWindow(qtw.QWidget):
         self.room_twelve_combo_box = qtw.QComboBox()
         self.room_thirteen_combo_box = qtw.QComboBox()
         
-        room_combo_boxes = [self.room_one_combo_box,self.room_two_combo_box,self.room_three_combo_box,self.room_four_combo_box,self.room_five_combo_box,self.room_six_combo_box,self.room_seven_combo_box,self.room_eight_combo_box,self.room_nine_combo_box,self.room_ten_combo_box, self.room_eleven_combo_box, self.room_twelve_combo_box, self.room_thirteen_combo_box]
-        #room_combo_boxes = room_combo_boxes[0:(len(self._students)+1)]
+        self._room_combo_boxes = [self.room_one_combo_box,self.room_two_combo_box,self.room_three_combo_box,self.room_four_combo_box,self.room_five_combo_box,self.room_six_combo_box,self.room_seven_combo_box,self.room_eight_combo_box,self.room_nine_combo_box,self.room_ten_combo_box, self.room_eleven_combo_box, self.room_twelve_combo_box, self.room_thirteen_combo_box]
         
-        self.edit_layout = qtw.QHBoxLayout()
+        self.combo_boxes_layout = qtw.QHBoxLayout()
+        self.edit_layout = qtw.QVBoxLayout()
         
-        for combo_box in room_combo_boxes:
+        for combo_box in self._room_combo_boxes:
             for student in students:
                 combo_box.addItem(student.name())
         
@@ -833,33 +838,32 @@ class EditWindow(qtw.QWidget):
         self.combo_box_layout_thirteen = qtw.QHBoxLayout()
         
         combo_box_layouts = [self.combo_box_layout_one, self.combo_box_layout_two, self.combo_box_layout_three, self.combo_box_layout_four, self.combo_box_layout_five, self.combo_box_layout_six, self.combo_box_layout_seven, self.combo_box_layout_eight, self.combo_box_layout_nine, self.combo_box_layout_ten, self.combo_box_layout_eleven, self.combo_box_layout_twelve, self.combo_box_layout_thirteen]
-        #combo_box_layouts = combo_box_layouts[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms)]
         
         combo_box_layout_number = 0
         combo_box_number = 0
         
         for i in range(self._amount_of_one_man_rooms):
             
-            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layouts[combo_box_layout_number].addWidget(self._room_combo_boxes[combo_box_number])
             combo_box_layout_number += 1
             combo_box_number += 1
         
         for i in range(self._amount_of_two_man_rooms):
             
-            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layouts[combo_box_layout_number].addWidget(self._room_combo_boxes[combo_box_number])
             combo_box_number += 1
-            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layouts[combo_box_layout_number].addWidget(self._room_combo_boxes[combo_box_number])
             combo_box_number += 1
             
             combo_box_layout_number += 1
         
         for i in range(self._amount_of_three_man_rooms):
             
-            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layouts[combo_box_layout_number].addWidget(self._room_combo_boxes[combo_box_number])
             combo_box_number += 1
-            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layouts[combo_box_layout_number].addWidget(self._room_combo_boxes[combo_box_number])
             combo_box_number += 1
-            combo_box_layouts[combo_box_layout_number].addWidget(room_combo_boxes[combo_box_number])
+            combo_box_layouts[combo_box_layout_number].addWidget(self._room_combo_boxes[combo_box_number])
             combo_box_number += 1
             
             combo_box_layout_number += 1
@@ -881,14 +885,43 @@ class EditWindow(qtw.QWidget):
         room_layouts = [self.room_layout_one, self.room_layout_two, self.room_layout_three, self.room_layout_four, self.room_layout_five, self.room_layout_six, self.room_layout_seven, self.room_layout_eight, self.room_layout_nine, self.room_layout_ten, self.room_layout_eleven, self.room_layout_twelve, self.room_layout_thirteen]
         room_layouts = room_layouts[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms)]
         
+        
         for i in range((self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms)):
             room_layouts[i].addWidget(room_labels[i])
             room_layouts[i].addLayout(combo_box_layouts[i])
         
+        self._room_combo_boxes = self._room_combo_boxes[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms+1)]
+        
         for room_layout in room_layouts:
-            self.edit_layout.addLayout(room_layout)
+            self.combo_boxes_layout.addLayout(room_layout)
 
+        self.edit_layout.addLayout(self.combo_boxes_layout)
+        
+        self.submit_combination_button = qtw.QPushButton("submit")
+        self.submit_combination_button.clicked.connect(self.submit_button_clicked)
+        self.edit_layout.addWidget(self.submit_combination_button)
+        
         self.setLayout(self.edit_layout)
+    
+    def submit_button_clicked(self):
+        used_students = []
+        for combo_box in self._room_combo_boxes:
+            if combo_box.currentText() not in used_students:
+                used_students.append(combo_box.currentText())
+            else:
+                qtw.QMessageBox.warning(self, "repeated student", "You've accidentally used the same student(s) twice. Please double check.", qtw.QMessageBox.StandardButton.Ok)
+                break
+    
+class DialogWindow(qtw.QDialog):
+    def __init__(self):
+        super().__init__()
+    
+        self.setWindowTitle("Is this the combination you want?")
+        
+        QBtn = (
+            qtw.QDialogButtonBox.StandardButton.Yes | qtw.QDialogButtonBox.StandardButton.No
+        )
+        
 
 
 app = qtw.QApplication([])

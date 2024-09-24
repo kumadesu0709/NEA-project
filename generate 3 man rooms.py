@@ -5,7 +5,6 @@ import random
 
 
 wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA testing (2).xlsx")
-
 ws = wb.active
 
 class Student:
