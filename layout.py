@@ -2,10 +2,9 @@ import random
 import PyQt6.QtWidgets as qtw
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import * 
-import sys
-from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 import ast
+from numbers_parser import Document
 
 
 class Student:
@@ -341,7 +340,10 @@ class MainWindow(qtw.QMainWindow):
             student_twelve= Student(ws["B13"].value, ws["C13"].value, ws["D13"].value, ws["E13"].value, ws["F13"].value, ws["G13"].value)
             student_thirteen = Student(ws["B14"].value, ws["C14"].value, ws["D14"].value, ws["E14"].value, ws["F14"].value, ws["G14"].value)
 
-            students = [student_one,student_two, student_three, student_four, student_five, student_six, student_seven, student_eight, student_nine, student_ten, student_eleven, student_twelve, student_thirteen]
+            students = [student_one,student_two, student_three, student_four, 
+                        student_five, student_six, student_seven, student_eight, 
+                        student_nine, student_ten, student_eleven, student_twelve, 
+                        student_thirteen]
             while (students[-1]).name() == None:
                 students.pop()
             self.setting_window = SettingsWindow(students)
@@ -420,7 +422,7 @@ class SettingsWindow(qtw.QWidget):
         self.weekly_settings.addWidget(self.do_nothing)
         self.vlayout.addLayout(self.weekly_settings)
 
-        self.time_warning_label = qtw.QLabel("Some certain combination of rooms could be extremely slow due to the amount of combinations generated. Would you like to speed up the calculation process? This may not produce the best results.")
+        self.time_warning_label = qtw.QLabel("Would you like to speed up the calculation process? This may not produce the best results.")
         self.time_warning_check_box = qtw.QCheckBox("Speed up the process.")
         self.vlayout.addWidget(self.time_warning_label)
         self.vlayout.addWidget(self.time_warning_check_box)
@@ -558,16 +560,21 @@ class SettingsWindow(qtw.QWidget):
                 self.result_window = None
 
 class ResultWindow(qtw.QWidget):
-    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, amount_of_combinations, speed_up_calc):
+    
+    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, 
+                amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, 
+                amount_of_combinations, speed_up_calc):
         super().__init__()
         self.setWindowTitle("Results")
         self.result_layout = qtw.QVBoxLayout()
         self.reminder_label = qtw.QLabel('Click the combination to select the combination, or click "Create Own Combination" to create your own combination')
         self.reminder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.result_layout.addWidget(self.reminder_label)
+        self._returned_rooming_list = []
         
         self.settings_window = None
         self.edit_window = None
+        self.output_setting_window = None
         self._students = students
         self._unwanted_pairs = unwanted_pairs
         self._wanted_pairs = wanted_pairs
@@ -725,36 +732,71 @@ class ResultWindow(qtw.QWidget):
             
         self.result_layout.addLayout(self.combination_layout)
     
-    def combination_one_clicked(self):
-        print(self.rooms_and_combination_one.text())
+    def combination_button_clicked(self, button_clicked):
+        text = button_clicked.text()
+        text = text.replace("     ", ",")
+        text = text.replace(":", ",")
+        room_label_list = list(text.split(","))[:-2]
+        
+        for i in range (self._amount_of_one_man_rooms):
+            room_label = []
+            room_label = room_label_list[0:2]
+            for label in room_label:
+                room_label_list.remove(label)
+            self._returned_rooming_list.append(room_label)
+        
+        for i in range (self._amount_of_two_man_rooms):
+            room_label = []
+            room_label = room_label_list[0:3]
+            for label in room_label:
+                room_label_list.remove(label)
+            self._returned_rooming_list.append(room_label)
+        
+        for i in range (self._amount_of_three_man_rooms):
+            room_label = []
+            room_label = room_label_list[0:4]
+            for label in room_label:
+                room_label_list.remove(label)
+            self._returned_rooming_list.append(room_label)
+        
+        if self.output_setting_window == None:
+            self.output_setting_window = OutputSettingsWindow(self._returned_rooming_list)
+            self.output_setting_window.show()
+        else:
+            self.output_setting_window.close()
+            self.output_setting_window = None
         
     
+    def combination_one_clicked(self):
+        self.combination_button_clicked(self.rooms_and_combination_one)
+
     def combination_two_clicked(self):
-        print(self.rooms_and_combination_two.text())
+        self.combination_button_clicked(self.rooms_and_combination_two)
     
     def combination_three_clicked(self):
-        print(self.rooms_and_combination_three.text())
+        self.combination_button_clicked(self.rooms_and_combination_three)
+        print(self._returned_rooming_list)
 
     def combination_four_clicked(self):
-        print(self.rooms_and_combination_four.text())
-
+        self.combination_button_clicked(self.rooms_and_combination_four)
+        
     def combination_five_clicked(self):
-        print(self.rooms_and_combination_five.text())
+        self.combination_button_clicked(self.rooms_and_combination_five)
     
     def combination_six_clicked(self):
-        print(self.rooms_and_combination_six.text())
+        self.combination_button_clicked(self.rooms_and_combination_six)
     
     def combination_seven_clicked(self):
-        print(self.rooms_and_combination_seven.text())
+        self.combination_button_clicked(self.rooms_and_combination_seven)
     
     def combination_eight_clicked(self):
-        print(self.rooms_and_combination_eight.text())
+        self.combination_button_clicked(self.rooms_and_combination_eight)
 
     def combination_nine_clicked(self):
-        print(self.rooms_and_combination_nine.text())
+        self.combination_button_clicked(self.rooms_and_combination_nine)
 
     def combination_ten_clicked(self):
-        print(self.rooms_and_combination_ten.text())
+        self.combination_button_clicked(self.rooms_and_combination_ten)
     
     def back_to_settings_clicked(self):
         
@@ -790,7 +832,8 @@ class EditWindow(qtw.QWidget):
         self._amount_of_one_man_rooms = amount_of_one_man_rooms
         self._amount_of_two_man_rooms = amount_of_two_man_rooms
         self._amount_of_three_man_rooms = amount_of_three_man_rooms
-        
+        self._output_settings_window = None
+        self._returned_room_list = []
         
         self.room_one_combo_box = qtw.QComboBox()
         self.room_two_combo_box = qtw.QComboBox()
@@ -821,7 +864,8 @@ class EditWindow(qtw.QWidget):
             room_labels.append(qtw.QLabel(f"Room {i}"))
         for label in room_labels:
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
+            self._returned_room_list.append([label.text()])
+        print(self._returned_room_list)
         
         self.combo_box_layout_one = qtw.QHBoxLayout()
         self.combo_box_layout_two = qtw.QHBoxLayout()
@@ -890,8 +934,6 @@ class EditWindow(qtw.QWidget):
             room_layouts[i].addWidget(room_labels[i])
             room_layouts[i].addLayout(combo_box_layouts[i])
         
-        self._room_combo_boxes = self._room_combo_boxes[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms+1)]
-        
         for room_layout in room_layouts:
             self.combo_boxes_layout.addLayout(room_layout)
 
@@ -905,25 +947,74 @@ class EditWindow(qtw.QWidget):
     
     def submit_button_clicked(self):
         used_students = []
-        for combo_box in self._room_combo_boxes:
+        can_pass_on = True
+        self._room_combo_boxes_copy = self._room_combo_boxes[0:(self._amount_of_one_man_rooms+self._amount_of_two_man_rooms+self._amount_of_three_man_rooms+1)]
+        
+        for combo_box in self._room_combo_boxes_copy:
             if combo_box.currentText() not in used_students:
                 used_students.append(combo_box.currentText())
             else:
+                print(used_students)
                 qtw.QMessageBox.warning(self, "repeated student", "You've accidentally used the same student(s) twice. Please double check.", qtw.QMessageBox.StandardButton.Ok)
+                can_pass_on = False
                 break
-    
-class DialogWindow(qtw.QDialog):
-    def __init__(self):
+            
+        if can_pass_on == True:
+            if self._output_settings_window == None:
+                returned_room_list_index = 0
+                combo_box_index = 0
+                for i in range(self._amount_of_one_man_rooms):
+                    self._returned_room_list[returned_room_list_index].append(self._room_combo_boxes[combo_box_index].currentText())
+                    returned_room_list_index += 1
+                    combo_box_index += 1
+                for i in range(self._amount_of_two_man_rooms):
+                    self._returned_room_list[returned_room_list_index].append(self._room_combo_boxes[combo_box_index].currentText())
+                    combo_box_index += 1
+                    self._returned_room_list[returned_room_list_index].append(self._room_combo_boxes[combo_box_index].currentText())
+                    combo_box_index += 1
+                    returned_room_list_index += 1
+                for i in range(self._amount_of_three_man_rooms):
+                    self._returned_room_list[returned_room_list_index].append(self._room_combo_boxes[combo_box_index].currentText())
+                    combo_box_index += 1
+                    self._returned_room_list[returned_room_list_index].append(self._room_combo_boxes[combo_box_index].currentText())
+                    combo_box_index += 1
+                    self._returned_room_list[returned_room_list_index].append(self._room_combo_boxes[combo_box_index].currentText())
+                    combo_box_index += 1
+                    returned_room_list_index += 1
+                self._output_settings_window = OutputSettingsWindow(self._returned_room_list)
+                self._output_settings_window.show()
+            else:
+                self._output_settings_window.close()
+                self._output_settings_window = None
+
+
+class OutputSettingsWindow(qtw.QWidget):
+    def __init__(self, rooming_text_list):
+        
         super().__init__()
-    
-        self.setWindowTitle("Is this the combination you want?")
+        self.setWindowTitle("Output Settings")
+        qtw.QApplication.closeAllWindows()
+        self._rooming_text_list = rooming_text_list
+        print(self._rooming_text_list)
+        self.submit_button = qtw.QPushButton("Submit")
+        self.output_setting_layout = qtw.QVBoxLayout()
+        form_layout_for_document = qtw.QFormLayout()
+        self.document_name = qtw.QLineEdit()
+        self.year_group_text= qtw.QLineEdit()
+        form_layout_for_document.addRow('Please enter the name that you give to your number sheet, or enter the name of the enter sheet that you want to alter', self.document_name)
+        form_layout_for_document.addRow('Which year group is this for?', self.year_group_text)
+        self.output_setting_layout.addLayout(form_layout_for_document)
+        self.setLayout(self.output_setting_layout)
         
-        QBtn = (
-            qtw.QDialogButtonBox.StandardButton.Yes | qtw.QDialogButtonBox.StandardButton.No
-        )
+class HaveExportedWindow(qtw.QWidget):
+    def __init__(self):
         
-
-
+        super().__init__()
+        self.congrats_layout = qtw.QVBoxLayout()
+        self.congrats_label = qtw.QLabel("Your choice has been exported onto the chosen number sheet")
+        self.congrats_layout.addWidget(self.congrats_label)
+        self.setLayout(self.congrats_layout)
+        
 app = qtw.QApplication([])
 
 window = MainWindow()
