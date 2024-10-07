@@ -989,23 +989,49 @@ class EditWindow(qtw.QWidget):
 
 
 class OutputSettingsWindow(qtw.QWidget):
+    
     def __init__(self, rooming_text_list):
         
         super().__init__()
         self.setWindowTitle("Output Settings")
         qtw.QApplication.closeAllWindows()
         self._rooming_text_list = rooming_text_list
-        print(self._rooming_text_list)
         self.submit_button = qtw.QPushButton("Submit")
+        self.submit_button.clicked.connect(self.submit_clicked)
         self.output_setting_layout = qtw.QVBoxLayout()
         form_layout_for_document = qtw.QFormLayout()
         self.document_name = qtw.QLineEdit()
         self.year_group_text= qtw.QLineEdit()
-        form_layout_for_document.addRow('Please enter the name that you give to your number sheet, or enter the name of the enter sheet that you want to alter', self.document_name)
+        self.check_if_create_new_number_sheet = qtw.QCheckBox("Would you like to create a new document?")
+        form_layout_for_document.addRow('Please enter the name of the number sheet (or the name that you want to give to the sheet)', self.document_name)
         form_layout_for_document.addRow('Which year group is this for?', self.year_group_text)
         self.output_setting_layout.addLayout(form_layout_for_document)
+        self.output_setting_layout.addWidget(self.check_if_create_new_number_sheet)
+        self.output_setting_layout.addWidget(self.submit_button)
         self.setLayout(self.output_setting_layout)
         
+    def submit_clicked(self):
+        
+        if self.check_if_create_new_number_sheet.isChecked():
+            doc = Document()
+            doc.add_sheet(self.document_name.text(), self.year_group_text.text())
+        else:
+            doc = Document(self.document_name.text())
+        sheet = doc.sheets[self.document_name.text()]
+        table = sheet.tables[self.year_group_text.text()]
+        row = 1
+        column = 0
+        for room in self._rooming_text_list:
+            column = 0
+            for label in room:
+                table.write(row, column, label)
+                column += 1
+            row+= 1
+        if self.document_name.text()[-8:] == ".numbers":
+            doc.save(self.document_name.text())
+        else:
+            doc.save(f'{self.document_name.text()}.numbers')
+            
 class HaveExportedWindow(qtw.QWidget):
     def __init__(self):
         
