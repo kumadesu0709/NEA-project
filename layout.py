@@ -665,8 +665,6 @@ class ResultWindow(qtw.QWidget):
                 self._end_with = self._end_with + 10
             else:
                 self._end_with = len(self._rooming_scores)
-            print(self._start_with)
-            print(self._end_with)
             self.create_combination_layout()
     
     def back_clicked(self):
@@ -690,8 +688,6 @@ class ResultWindow(qtw.QWidget):
                 self._combination_no = self._combination_no - 15
         else:
             self._combination_no = 1
-        print(self._start_with)
-        print(self._end_with)
         self.create_combination_layout()
     
     def create_combination_layout(self):
@@ -775,7 +771,6 @@ class ResultWindow(qtw.QWidget):
     
     def combination_three_clicked(self):
         self.combination_button_clicked(self.rooms_and_combination_three)
-        print(self._returned_rooming_list)
 
     def combination_four_clicked(self):
         self.combination_button_clicked(self.rooms_and_combination_four)
@@ -865,7 +860,6 @@ class EditWindow(qtw.QWidget):
         for label in room_labels:
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self._returned_room_list.append([label.text()])
-        print(self._returned_room_list)
         
         self.combo_box_layout_one = qtw.QHBoxLayout()
         self.combo_box_layout_two = qtw.QHBoxLayout()
@@ -954,7 +948,6 @@ class EditWindow(qtw.QWidget):
             if combo_box.currentText() not in used_students:
                 used_students.append(combo_box.currentText())
             else:
-                print(used_students)
                 qtw.QMessageBox.warning(self, "repeated student", "You've accidentally used the same student(s) twice. Please double check.", qtw.QMessageBox.StandardButton.Ok)
                 can_pass_on = False
                 break
@@ -993,6 +986,7 @@ class OutputSettingsWindow(qtw.QWidget):
     def __init__(self, rooming_text_list):
         
         super().__init__()
+        self.has_been_imported = None
         self.setWindowTitle("Output Settings")
         qtw.QApplication.closeAllWindows()
         self._rooming_text_list = rooming_text_list
@@ -1014,13 +1008,13 @@ class OutputSettingsWindow(qtw.QWidget):
         
         if self.check_if_create_new_number_sheet.isChecked():
             doc = Document()
-            doc.add_sheet(self.year_group_text.text(), self.year_group_text.text())
         else:
             if self.document_name.text()[-8:] == ".numbers":
                 doc = Document(self.document_name.text())
             else:
                 doc = Document(f"{self.document_name.text()}.numbers")
-        sheet = doc.sheets[self.document_name.text()]
+        doc.add_sheet(self.year_group_text.text(), self.year_group_text.text())
+        sheet = doc.sheets[self.year_group_text.text()]
         table = sheet.tables[self.year_group_text.text()]
         row = 1
         column = 0
@@ -1034,8 +1028,16 @@ class OutputSettingsWindow(qtw.QWidget):
             doc.save(self.document_name.text())
         else:
             doc.save(f'{self.document_name.text()}.numbers')
+        if self.has_been_imported == None:
+            self.close()
+            self.has_been_imported = HaveExportedWindow()
+            self.has_been_imported.show()
+        else:
+            self.has_been_imported.close()
+            self.has_been_imported_window = None
             
 class HaveExportedWindow(qtw.QWidget):
+    
     def __init__(self):
         
         super().__init__()
@@ -1043,7 +1045,7 @@ class HaveExportedWindow(qtw.QWidget):
         self.congrats_label = qtw.QLabel("Your choice has been exported onto the chosen number sheet")
         self.congrats_layout.addWidget(self.congrats_label)
         self.setLayout(self.congrats_layout)
-        
+
 app = qtw.QApplication([])
 
 window = MainWindow()
