@@ -1014,9 +1014,12 @@ class OutputSettingsWindow(qtw.QWidget):
         
         if self.check_if_create_new_number_sheet.isChecked():
             doc = Document()
-            doc.add_sheet(self.document_name.text(), self.year_group_text.text())
+            doc.add_sheet(self.year_group_text.text(), self.year_group_text.text())
         else:
-            doc = Document(self.document_name.text())
+            if self.document_name.text()[-8:] == ".numbers":
+                doc = Document(self.document_name.text())
+            else:
+                doc = Document(f"{self.document_name.text()}.numbers")
         sheet = doc.sheets[self.document_name.text()]
         table = sheet.tables[self.year_group_text.text()]
         row = 1
