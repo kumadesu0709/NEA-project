@@ -291,7 +291,7 @@ class rooming:
 
 
 
-student_one = Student(ws["B2"].value, ws["C2"].value, ws["D2"].value, ws["E2"].value, ws["F2"].value, ws["G2"].value)
+student_one = Student(ws["B2"].value, ws["C2"].value, ws["D2"].value, ws["E2"].value, ws["F2"].value, ws["G2"].value )
 student_two = Student(ws["B3"].value, ws["C3"].value, ws["D3"].value, ws["E3"].value, ws["F3"].value, ws["G3"].value)
 student_three = Student(ws["B4"].value, ws["C4"].value, ws["D4"].value, ws["E4"].value, ws["F4"].value, ws["G4"].value)
 student_four = Student(ws["B5"].value, ws["C5"].value, ws["D5"].value, ws["E5"].value, ws["F5"].value, ws["G5"].value)
@@ -312,5 +312,3 @@ rooming1 = rooming(students, [], [], "a", 100)
 rooming1.produce_roomings(0,5,0)
 rooming1.give_score_to_combinations(True)
 print(rooming1.return_scores())
-
-
