@@ -7,6 +7,19 @@ import ast
 from numbers_parser import Document
 
 
+def generate_all_combination(students, max_no_of_people):
+    result = []
+    def backtrack(start, comb):
+        if len(comb) == max_no_of_people:
+            result.append(comb.copy())
+            return
+        for i in range(start, len(students)):
+            comb.append(students[i])
+            backtrack(i+1, comb)
+            comb.pop()
+    backtrack(0, [])
+    return result
+
 class Student:
 
     def __init__(self, name, preferred_one, preferred_two, preferred_three, hated, is_weekly):
@@ -41,7 +54,7 @@ class Student:
     def __str__(self):
         return str(self._name)
 
-class rooming:
+class Rooming:
 
     def __init__(self, student_in_yeargroup:list, unwanted_pairs:list, wanted_pairs:list, weekly_boarder_setting:str, amount_of_combinations: int):
         self._student_in_yeargroup = student_in_yeargroup
@@ -64,19 +77,6 @@ class rooming:
             for i in range (len(self._weekly_boarders)):
                 for j in range (i+1, len(self._weekly_boarders)):
                     self._unwanted_pairs.append([self._weekly_boarders[i],self._weekly_boarders[j]])
-    
-    def generate_all_combination(self, max_no_of_people):
-        result = []
-        def backtrack(start, comb):
-            if len(comb) == max_no_of_people:
-                result.append(comb.copy())
-                return
-            for i in range(start, len(self._student_in_yeargroup)):
-                comb.append(self._student_in_yeargroup[i])
-                backtrack(i+1, comb)
-                comb.pop()
-        backtrack(0, [])
-        return result
 
 
     def _check_existed_pupil(self,room_one, room_two):
@@ -117,9 +117,23 @@ class rooming:
     
     def produce_roomings(self, no_of_one_man_room:int,no_of_two_man_room:int,no_of_three_man_room:int):
 
-        one_man_rooms = self.generate_all_combination(1)
-        two_man_rooms = self.generate_all_combination(2)
-        three_man_rooms = self.generate_all_combination(3)
+        one_man_rooms = generate_all_combination(self._student_in_yeargroup,1)
+        two_man_rooms = generate_all_combination(self._student_in_yeargroup,2)
+        three_man_rooms = generate_all_combination(self._student_in_yeargroup,3)
+        
+        file = open('has_been_roommate.txt')
+        contents = file.readlines() 
+        file.close()
+        file = open('has_been_roommate.txt', 'a')
+        for pair in two_man_rooms:
+            not_in_document = True
+            for content in contents:
+                if str(pair) in content:
+                    not_in_document = False
+                    break
+            if not_in_document == True:
+                file.write(f'{[pair[0].name(), pair[1].name()]}0\n')
+        file.close()
 
         combs_one_man_rooms = self.pick_rooms(one_man_rooms,no_of_one_man_room)
         combs_two_man_rooms = self.pick_rooms(two_man_rooms, no_of_two_man_room)
@@ -583,7 +597,7 @@ class ResultWindow(qtw.QWidget):
         self._amount_of_two_man_rooms = amount_of_two_man_rooms
         self._amount_of_three_man_rooms = amount_of_three_man_rooms
         self._amount_of_combinations = amount_of_combinations
-        self._rooming = rooming(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_settings, self._amount_of_combinations)
+        self._rooming = Rooming(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_settings, self._amount_of_combinations)
         self._rooming.produce_roomings(self._amount_of_one_man_rooms,self._amount_of_two_man_rooms,self._amount_of_three_man_rooms)
         self._rooming.give_score_to_combinations(speed_up_calc)
         self._rooming_scores = self._rooming.return_scores()
@@ -732,6 +746,7 @@ class ResultWindow(qtw.QWidget):
         text = button_clicked.text()
         text = text.replace("     ", ",")
         text = text.replace(":", ",")
+        text = text.replace(" ", "")
         room_label_list = list(text.split(","))[:-2]
         
         for i in range (self._amount_of_one_man_rooms):
@@ -1028,6 +1043,12 @@ class OutputSettingsWindow(qtw.QWidget):
             doc.save(self.document_name.text())
         else:
             doc.save(f'{self.document_name.text()}.numbers')
+        
+        for i in range(len(self._rooming_text_list)):
+            list_of_combination_in_room = generate_all_combination(self._rooming_text_list[i][1:len(self._rooming_text_list[i])], 2)
+            print(list_of_combination_in_room)
+        
+        
         if self.has_been_imported == None:
             self.close()
             self.has_been_imported = HaveExportedWindow()
@@ -1052,3 +1073,4 @@ window = MainWindow()
 window.show()
 
 app.exec()
+
