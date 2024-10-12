@@ -1002,6 +1002,11 @@ class OutputSettingsWindow(qtw.QWidget):
         
         super().__init__()
         self.has_been_imported = None
+        
+        file = open('has_been_roommate.txt')
+        self._contents = file.readlines() 
+        file.close()
+        
         self.setWindowTitle("Output Settings")
         qtw.QApplication.closeAllWindows()
         self._rooming_text_list = rooming_text_list
@@ -1044,9 +1049,21 @@ class OutputSettingsWindow(qtw.QWidget):
         else:
             doc.save(f'{self.document_name.text()}.numbers')
         
+        copy_of_contents = self._contents.copy()
+        
         for i in range(len(self._rooming_text_list)):
             list_of_combination_in_room = generate_all_combination(self._rooming_text_list[i][1:len(self._rooming_text_list[i])], 2)
-            print(list_of_combination_in_room)
+            for combination in list_of_combination_in_room:
+                for position in range(len(self._contents)):
+                    if str(combination) in self._contents[position] or str([combination[1],combination[0]]) in self._contents[position]:
+                        copy_of_contents[position] = f'{str(combination)}1\n'
+        
+        print(copy_of_contents)
+        
+        with open('has_been_roommate.txt', 'w') as file:
+            for content in copy_of_contents:
+                file.write(content)
+        file.close()
         
         
         if self.has_been_imported == None:
