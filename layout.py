@@ -128,12 +128,14 @@ class Rooming:
         for pair in two_man_rooms:
             not_in_document = True
             for content in contents:
-                if str(pair) in content:
+                if str([pair[0].name(), pair[1].name()]) in str(content) or str([pair[1].name(), pair[0].name()]) in str(content):
                     not_in_document = False
                     break
             if not_in_document == True:
                 file.write(f'{[pair[0].name(), pair[1].name()]}0\n')
         file.close()
+        file = open('has_been_roommate.txt')
+        contents = file.readlines() 
 
         combs_one_man_rooms = self.pick_rooms(one_man_rooms,no_of_one_man_room)
         combs_two_man_rooms = self.pick_rooms(two_man_rooms, no_of_two_man_room)
@@ -1051,14 +1053,13 @@ class OutputSettingsWindow(qtw.QWidget):
         
         copy_of_contents = self._contents.copy()
         
-        for i in range(len(self._rooming_text_list)):
-            list_of_combination_in_room = generate_all_combination(self._rooming_text_list[i][1:len(self._rooming_text_list[i])], 2)
-            for combination in list_of_combination_in_room:
-                for position in range(len(self._contents)):
-                    if str(combination) in self._contents[position] or str([combination[1],combination[0]]) in self._contents[position]:
-                        copy_of_contents[position] = f'{str(combination)}1\n'
         
-        print(copy_of_contents)
+        for rooming_text_list in self._rooming_text_list:
+            list_of_combination_in_room = generate_all_combination(rooming_text_list[1:len(rooming_text_list)], 2)
+            for combination in list_of_combination_in_room:
+                for i in range(len(self._contents)):
+                    if str(combination) in self._contents[i] or str([combination[1],combination[0]]) in self._contents[i]:
+                        copy_of_contents[i] = f'{str(combination)}1\n'
         
         with open('has_been_roommate.txt', 'w') as file:
             for content in copy_of_contents:
