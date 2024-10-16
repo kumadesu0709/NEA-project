@@ -370,7 +370,6 @@ class MainWindow(qtw.QMainWindow):
             self.setting_window.close()
             self.setting_window = None
 
-
 class SettingsWindow(qtw.QWidget):
     def __init__(self, students):
 
@@ -381,7 +380,7 @@ class SettingsWindow(qtw.QWidget):
         self._wanted_pairs = []
         self._weekly_setting_text = ""
         
-        self.vlayout = qtw.QVBoxLayout()
+        self.setting_window_layout = qtw.QVBoxLayout()
         self.unwanted_pairs_hbox_layout = qtw.QHBoxLayout()
         self.unwanted_pairs_vbox_layout = qtw.QVBoxLayout()
         self.wanted_pairs_hbox_layout = qtw.QHBoxLayout()
@@ -397,6 +396,7 @@ class SettingsWindow(qtw.QWidget):
 
         self._students = students
         self.result_window = None
+        self.show_previous_settings_window = None
         self._unwanted_combination_text = ""
         self._wanted_combination_text = ""
 
@@ -415,14 +415,14 @@ class SettingsWindow(qtw.QWidget):
         self.room_settings.addWidget(self.amount_of_one_man,1,0)
         self.room_settings.addWidget(self.amount_of_two_man,1,1)
         self.room_settings.addWidget(self.amount_of_three_man,1,2)
-        self.vlayout.addLayout(self.room_settings)
+        self.setting_window_layout.addLayout(self.room_settings)
 
 
         self.amount_of_combinations_label = qtw.QLabel("How many combinations would you like to see?")
         self.amount_of_combinations = qtw.QLineEdit("")
         self.amount_of_combination_layout.addWidget(self.amount_of_combinations_label)
         self.amount_of_combination_layout.addWidget(self.amount_of_combinations)
-        self.vlayout.addLayout(self.amount_of_combination_layout)
+        self.setting_window_layout.addLayout(self.amount_of_combination_layout)
 
 
         self.weekly_boarder_label = qtw.QLabel("Would you like to...")
@@ -436,15 +436,14 @@ class SettingsWindow(qtw.QWidget):
         self.weekly_settings.addWidget(self.all_in_same_room)
         self.weekly_settings.addWidget(self.put_them_in_pairs)
         self.weekly_settings.addWidget(self.do_nothing)
-        self.vlayout.addLayout(self.weekly_settings)
+        self.setting_window_layout.addLayout(self.weekly_settings)
 
-        self.time_warning_label = qtw.QLabel("Would you like to speed up the calculation process? This may not produce the best results.")
-        self.time_warning_check_box = qtw.QCheckBox("Speed up the process.")
-        self.vlayout.addWidget(self.time_warning_label)
-        self.vlayout.addWidget(self.time_warning_check_box)
-
-
-
+        self.time_warning_check_box = qtw.QCheckBox("Would you like to speed up the calculation process? This may not produce the best results.")
+        self.setting_window_layout.addWidget(self.time_warning_check_box)
+        
+        self.check_if_show_not_been_roommate = qtw.QCheckBox("Would you like to see the students that haven't been roommate before?")
+        self.setting_window_layout.addWidget(self.check_if_show_not_been_roommate)
+        
         self.unwanted_pair_label = qtw.QLabel("Do you have any pairs of students you want to avoid putting into the same room?")    
         self.unwanted_pair_person_one = qtw.QComboBox()
         self.unwanted_pair_person_two = qtw.QComboBox()
@@ -465,7 +464,7 @@ class SettingsWindow(qtw.QWidget):
         self.unwanted_pairs_vbox_layout.addWidget(self.unwanted_pair_label)
         self.unwanted_pairs_vbox_layout.addLayout(self.unwanted_pairs_hbox_layout)
         self.unwanted_pairs_vbox_layout.addLayout(self.unwanted_pairs_buttons)
-        self.vlayout.addLayout(self.unwanted_pairs_vbox_layout)
+        self.setting_window_layout.addLayout(self.unwanted_pairs_vbox_layout)
 
         self.wanted_pair_label = qtw.QLabel("Do you have any pairs of students you want to put into the same room?")    
         self.wanted_pair_person_one = qtw.QComboBox()
@@ -487,19 +486,25 @@ class SettingsWindow(qtw.QWidget):
         self.wanted_pairs_vbox_layout.addWidget(self.wanted_pair_label)
         self.wanted_pairs_vbox_layout.addLayout(self.wanted_pairs_hbox_layout)
         self.wanted_pairs_vbox_layout.addLayout(self.wanted_pairs_buttons)
-        self.vlayout.addLayout(self.wanted_pairs_vbox_layout)
+        self.setting_window_layout.addLayout(self.wanted_pairs_vbox_layout)
 
         self.pairs_display.addWidget(self.unwanted_pair_display)
         self.pairs_display.addWidget(self.wanted_pair_display)
-        self.vlayout.addLayout(self.pairs_display)
+        self.setting_window_layout.addLayout(self.pairs_display)
 
-
+        self.button_layout = qtw.QHBoxLayout()
         self.submit_button = qtw.QPushButton("Submit")
         self.submit_button.clicked.connect(self.submit_clicked)
-        self.vlayout.addWidget(self.submit_button)
-
-
-        self.setLayout(self.vlayout)
+        self.save_button = qtw.QPushButton("Save This Setting")
+        self.save_button.clicked.connect(self.save_clicked)
+        self.use_previous_settings_button = qtw.QPushButton('Use Previous Settings')
+        self.use_previous_settings_button.clicked.connect(self.use_previous_settings_clicked)
+        self.button_layout.addWidget(self.save_button)
+        self.button_layout.addWidget(self.use_previous_settings_button)
+        self.button_layout.addWidget(self.submit_button)
+        
+        self.setting_window_layout.addLayout(self.button_layout)
+        self.setLayout(self.setting_window_layout)
     
     def unwanted_add_clicked(self):
         if self.unwanted_pair_person_one.currentText() != "None" and self.unwanted_pair_person_two.currentText() != "None" and (self.unwanted_pair_person_one.currentText() != self.unwanted_pair_person_two.currentText()):
@@ -552,6 +557,30 @@ class SettingsWindow(qtw.QWidget):
     def do_nothing_clicked(self):
         self._weekly_setting_text = "Nothing"
 
+    def save_clicked(self):
+        with open ('room_settings.txt', 'w') as file:
+            file.write(f'{self._unwanted_pairs}\n')
+            file.write(f'{self._wanted_pairs}\n')
+            file.write(f'{self._weekly_setting_text}\n')
+            file.write(f'{self.amount_of_one_man.currentText()}\n')
+            file.write(f'{self.amount_of_two_man.currentText()}\n')
+            file.write(f'{self.amount_of_three_man.currentText()}\n')
+            file.write(f'{self.amount_of_combinations.text()}\n')
+            file.write(f'{self.time_warning_check_box.isChecked()}\n')
+            file.write(f'{self.check_if_show_not_been_roommate.isChecked()}')
+        
+    def use_previous_settings_clicked(self):
+        file = open('room_settings.txt')
+        settings = file.readlines()
+        file.close()
+        if self.result_window == None:
+            self.close()
+            self.result_window = ResultWindow(self._students, ast.literal_eval((settings[0])[:-1]), ast.literal_eval((settings[1])[:-1]), (settings[2])[:-1], ast.literal_eval((settings[3])[:-1]), ast.literal_eval((settings[4])[:-1]), ast.literal_eval((settings[5])[:-1]), ast.literal_eval((settings[6])[:-1]), ast.literal_eval((settings[7])[:-1]), ast.literal_eval((settings[8])))
+            self.result_window.show()
+        else:
+            self.result_window.close()
+            self.result_window = None
+
     def submit_clicked(self):
         no_of_people_due_to_assign_room = int(self.amount_of_one_man.currentText()) + (int(self.amount_of_two_man.currentText())*2) + (int(self.amount_of_three_man.currentText())*3)
         if no_of_people_due_to_assign_room != len(self._students):
@@ -569,17 +598,48 @@ class SettingsWindow(qtw.QWidget):
                     qtw.QMessageBox.warning(self, "incorrect number of rooms", "There are more than three weekly boarders in this year group. Please choose another option.", qtw.QMessageBox.StandardButton.Ok)
                 else:
                     self.close()
-                    self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_setting_text, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()), self.time_warning_check_box.isChecked())
+                    self.result_window = ResultWindow(self._students, self._unwanted_pairs, self._wanted_pairs, self._weekly_setting_text, int(self.amount_of_one_man.currentText()), int(self.amount_of_two_man.currentText()), int(self.amount_of_three_man.currentText()), int(self.amount_of_combinations.text()), self.time_warning_check_box.isChecked(), self.check_if_show_not_been_roommate.isChecked())
                     self.result_window.show()
             else:
                 self.result_window.close()
                 self.result_window = None
 
+class ShowPreviousSettingsWindow(qtw.QWidget):
+    
+    def __init__(self):
+        super().__init__()
+        file = open('room_settings.txt')
+        settings = file.readlines()
+        file.close()
+        
+        self.show_previous_settings_layout = qtw.QVBoxLayout()
+        self.show_previous_settings_button_layout = qtw.QHBoxLayout()
+        self.ok_button = qtw.QPushButton("Ok")
+        self.cancel_button = qtw.QPushButton("Cancel")
+        
+        setting_string = 'Are you sure you want to use the previous settings? The previous setting is:\n'
+        setting_string += 'wanted pair(s): '
+        for wanted_pair in ast.literal_eval(settings[0][:-1]):
+            setting_string += f'{wanted_pair[0]} and {wanted_pair[1]}, '
+        setting_string = f'{setting_string[:-2]}\n'
+        setting_string += 'unwanted pair(s): '
+        for unwanted_pair in ast.literal_eval(settings[1][:-1]):
+            setting_string += f'{unwanted_pair[0]} and {unwanted_pair[1]}, '
+        setting_string = f'{setting_string[:-2]}\n'
+        setting_string += f'What to do with weekly boarders: {settings[2][:-1]}\n'
+        setting_string += f'Assign {settings[3][:-1]} one-man rooms, {settings[4][:-1]} two-man rooms, and {settings[5][:-1]} three-man rooms to this yeargroup\n'
+        setting_string += f'Generate {settings[6][:-1]} combinations\n'
+        if ast.literal_eval(settings[7][:-1]) and ast.literal_eval(settings[8]):
+            setting_string += "Speed up the calculation process\nShow the students that hasn't been roommate"
+        elif ast.literal_eval(settings[7][:-1]) and not ast.literal_eval(settings[8]):
+            setting_string += "Speed up the calculation process"
+        self.settings_label = qtw.QLabel(setting_string)
+        
 class ResultWindow(qtw.QWidget):
     
-    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, 
-                amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms, 
-                amount_of_combinations, speed_up_calc):
+    def __init__(self, students:list, unwanted_pairs:list, wanted_pairs:list, weekly_settings:str, 
+                amount_of_one_man_rooms:int, amount_of_two_man_rooms:int, amount_of_three_man_rooms:int, 
+                amount_of_combinations:int, speed_up_calc:True, show_hasnt_been_roommate:True):
         super().__init__()
         self.setWindowTitle("Results")
         self.result_layout = qtw.QVBoxLayout()
@@ -587,6 +647,7 @@ class ResultWindow(qtw.QWidget):
         self.reminder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.result_layout.addWidget(self.reminder_label)
         self._returned_rooming_list = []
+        self._show_hasnt_been_roommate = show_hasnt_been_roommate
         
         self.settings_window = None
         self.edit_window = None
@@ -636,6 +697,20 @@ class ResultWindow(qtw.QWidget):
         
         self.combination_layout = qtw.QVBoxLayout()
         self.result_page_buttons_layout = qtw.QHBoxLayout()
+        
+        if self._show_hasnt_been_roommate:
+            file = open('has_been_roommate.txt')
+            contents = file.readlines()
+            hasnt_been_roommate_string = ''
+            for content in contents:
+                if content[len(content)-2] == '0':
+                    pair = ast.literal_eval(content[0:len(content)-2])
+                    hasnt_been_roommate_string += f'{pair[0]} and {pair[1]}, '
+            hasnt_been_roommate_string = hasnt_been_roommate_string[0:len(hasnt_been_roommate_string)-2]
+            hasnt_been_roommate_string += " hasn't been roommate yet."
+            self.hasnt_been_roommate_label = qtw.QLabel(hasnt_been_roommate_string)
+            self.hasnt_been_roommate_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.result_layout.addWidget(self.hasnt_been_roommate_label)
         
         self._start_with = 0
         if len(self._rooming_scores) > 11:
@@ -828,12 +903,7 @@ class ResultWindow(qtw.QWidget):
         else:
             self.edit_window.close()
             self.edit_window = None
-        
-            
-            
-            
-        
-        
+
 class EditWindow(qtw.QWidget):
     def __init__ (self, students, amount_of_one_man_rooms, amount_of_two_man_rooms, amount_of_three_man_rooms):
         
@@ -1050,9 +1120,8 @@ class OutputSettingsWindow(qtw.QWidget):
             doc.save(self.document_name.text())
         else:
             doc.save(f'{self.document_name.text()}.numbers')
-        
+
         copy_of_contents = self._contents.copy()
-        
         
         for rooming_text_list in self._rooming_text_list:
             list_of_combination_in_room = generate_all_combination(rooming_text_list[1:len(rooming_text_list)], 2)
@@ -1066,7 +1135,6 @@ class OutputSettingsWindow(qtw.QWidget):
                 file.write(content)
         file.close()
         
-        
         if self.has_been_imported == None:
             self.close()
             self.has_been_imported = HaveExportedWindow()
@@ -1074,7 +1142,7 @@ class OutputSettingsWindow(qtw.QWidget):
         else:
             self.has_been_imported.close()
             self.has_been_imported_window = None
-            
+
 class HaveExportedWindow(qtw.QWidget):
     
     def __init__(self):
@@ -1091,4 +1159,3 @@ window = MainWindow()
 window.show()
 
 app.exec()
-
