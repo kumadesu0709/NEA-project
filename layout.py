@@ -133,7 +133,7 @@ class Rooming:
                 file.write(f'{[pair[0].name(), pair[1].name()]}0\n')
         file.close()
         file = open('has_been_roommate.txt')
-        contents = file.readlines() 
+        contents = file.readlines()
 
         combs_one_man_rooms = self.pick_rooms(one_man_rooms,no_of_one_man_room)
         combs_two_man_rooms = self.pick_rooms(two_man_rooms, no_of_two_man_room)
@@ -175,10 +175,9 @@ class Rooming:
 
     
     def _randomly_pick_combination(self):
-        if len(self._rooming_combinations) > 100000: 
-            self._rooming_combinations = random.sample(self._rooming_combinations, len(self._rooming_combinations)//2000)
+        if len(self._rooming_combinations) > 100000:
+            self._rooming_combinations = random.sample(self._rooming_combinations, len(self._rooming_combinations)//100)
             
-
     def _give_score_to_room(self,room:list):
 
         score = 0
@@ -236,7 +235,53 @@ class Rooming:
             
         return score
     
+    def _clean(self):
+
+        rooming_scores_keys = (self._rooming_scores.copy()).keys()
+        if len(self._wanted_pairs) > 0 and len(self._unwanted_pairs) > 0:
+            for key in rooming_scores_keys:
+                combination = ast.literal_eval(key)
+                need_to_remove = True
+                for room in combination:
+                    for wanted_pair in self._wanted_pairs:
+                        for unwanted_pair in self._unwanted_pairs:
+                            if set(wanted_pair).issubset(set(room)) == True and set(unwanted_pair).issubset(set(room)) == False:
+                                need_to_remove = False
+                if need_to_remove == True:
+                    if key in self._rooming_scores.keys():
+                        self._rooming_scores.pop(key)
+                        
+        elif len(self._wanted_pairs) > 0  and len(self._unwanted_pairs) == 0:
+            for key in rooming_scores_keys.keys():
+                combination = ast.literal_eval(key)
+                need_to_remove = True
+                for room in combination:
+                    for wanted_pair in self._wanted_pairs:
+                        if set(wanted_pair).issubset(set(room)) == True:
+                            need_to_remove = False
+                if need_to_remove == True:
+                    if key in self._rooming_scores.keys():
+                        self._rooming_scores.pop(key)
+        
+        elif len(self._unwanted_pairs) > 0 and len(self._wanted_pairs) == 0:
+            for key in rooming_scores_keys.keys():
+                combination = ast.literal_eval(key)
+                need_to_remove = True
+                for room in combination:
+                    for unwanted_pair in self._unwanted_pairs:
+                        if set(unwanted_pair).issubset(set(room)) == True:
+                            need_to_remove = False
+                if need_to_remove == True:
+                    if key in self._rooming_scores.keys():
+                        self._rooming_scores.pop(key)
+
+        
+        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
+        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
+
     def give_score_to_combinations(self,randomly_pick_room_on:bool):
+        if randomly_pick_room_on == True:
+            self._randomly_pick_combination()
         for combination in self._rooming_combinations:
             score = 0
             rooms_in_combination = []
@@ -249,48 +294,6 @@ class Rooming:
                     rooms_in_combination.append(student_in_room)
             self._rooming_scores[str(rooms_in_combination)] = score
         self._clean()
-        if randomly_pick_room_on == True:
-            self._randomly_pick_combination()
-    
-    def _clean(self):
-
-        rooming_scores_keys = self._rooming_scores.copy()
-        need_to_remove = False
-
-        if len(self._wanted_pairs) > 0 and len(self._unwanted_pairs) > 0:
-            for key in rooming_scores_keys.keys():
-                combination = ast.literal_eval(key)
-                need_to_remove = True
-                for room in combination:
-                    for wanted_pair in self._wanted_pairs:
-                        for unwanted_pair in self._unwanted_pairs:
-                            if set(wanted_pair).issubset(set(room)) == True and set(unwanted_pair).issubset(set(room)) == False:
-                                need_to_remove = False
-        
-        elif len(self._wanted_pairs) > 0  and len(self._unwanted_pairs) == 0:
-            for key in rooming_scores_keys.keys():
-                combination = ast.literal_eval(key)
-                need_to_remove = True
-                for room in combination:
-                    for wanted_pair in self._wanted_pairs:
-                        if set(wanted_pair).issubset(set(room)) == True:
-                            need_to_remove = False
-        
-        elif len(self._unwanted_pairs) > 0 and len(self._wanted_pairs) == 0:
-            for key in rooming_scores_keys.keys():
-                combination = ast.literal_eval(key)
-                need_to_remove = True
-                for room in combination:
-                    for unwanted_pair in self._unwanted_pairs:
-                        if set(unwanted_pair).issubset(set(room)) == True:
-                            need_to_remove = False
-
-        if need_to_remove == True:
-            if key in self._rooming_scores.keys():
-                self._rooming_scores.pop(key)
-        
-        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
-        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
 
     def return_rooming(self):
         return self._rooming_combinations
@@ -363,6 +366,7 @@ class MainWindow(qtw.QMainWindow):
 
             self.setting_window.close()
             self.setting_window = None
+
 
 class SettingsWindow(qtw.QWidget):
     def __init__(self, students):
@@ -612,7 +616,6 @@ class CheckIfUsePreviousSettingsWindow(qtw.QWidget):
         self.result_window = None
         
         self.students = students
-        print(self.students)
         self.show_previous_settings_layout = qtw.QVBoxLayout()
         self.show_previous_settings_button_layout = qtw.QHBoxLayout()
         self.ok_button = qtw.QPushButton("Ok")
@@ -653,7 +656,15 @@ class CheckIfUsePreviousSettingsWindow(qtw.QWidget):
             settings_file = open("room_settings.txt")
             settings = settings_file.readlines()
             settings_file.close()
-            self.result_window = ResultWindow(self.students, ast.literal_eval(settings[0][:-1]), ast.literal_eval(settings[1][:-1]), settings[2][:-1], ast.literal_eval(settings[3][:-1]), ast.literal_eval(settings[4][:-1]), ast.literal_eval(settings[5][:-1]),ast.literal_eval(settings[6][:-1]), ast.literal_eval(settings[7][:-1]), ast.literal_eval(settings[8]))
+            self.result_window = ResultWindow(self.students, ast.literal_eval(settings[0][:-1]), 
+                                              ast.literal_eval(settings[1][:-1]), 
+                                              settings[2][:-1], 
+                                              ast.literal_eval(settings[3][:-1]), 
+                                              ast.literal_eval(settings[4][:-1]), 
+                                              ast.literal_eval(settings[5][:-1]),
+                                              ast.literal_eval(settings[6][:-1]), 
+                                              ast.literal_eval(settings[7][:-1]), 
+                                              ast.literal_eval(settings[8]))
             self.result_window.show()
             self.close()
         else:
@@ -662,7 +673,8 @@ class CheckIfUsePreviousSettingsWindow(qtw.QWidget):
 
 class ResultWindow(qtw.QWidget):
     
-    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, amount_of_combinations, amount_of_one_man, amount_of_two_man, amount_of_three_man, speed_up_calc, show_hasnt_been_roommate):
+    def __init__(self, students, unwanted_pairs, wanted_pairs, weekly_settings, amount_of_combinations,
+                 amount_of_one_man, amount_of_two_man, amount_of_three_man, speed_up_calc, show_hasnt_been_roommate):
         
         super().__init__()
         
@@ -691,19 +703,13 @@ class ResultWindow(qtw.QWidget):
         self._rooming.produce_roomings(self.amount_of_one_man_rooms,self.amount_of_two_man_rooms,self.amount_of_three_man_rooms)
         self._rooming.give_score_to_combinations(self.speed_up_calc)
         self._rooming_scores = self._rooming.return_scores()
-        
-        if self.amount_of_combinations > len(self._rooming_scores):
-            self._combination_numbers = ["x"]*(self.amount_of_combinations + 10)
-            self._room_labels = ["x"]*(self.amount_of_combinations + 10)
-        else:
-            self._combination_numbers = ["x"]*(len(self._rooming_scores) + 10)
-            self._room_labels = ["x"]*(len(self._rooming_scores) + 10)
+        print(self._rooming_scores)
+        self._combination_numbers = ["x"]*(self.amount_of_combinations+10)
+        self._room_labels = ["x"]*(self.amount_of_combinations+10)
         self._ranking_rooms = {}
         
-        position = 0
-        for i in range (1, self.amount_of_combinations+1):
-            self._combination_numbers[position] = f'Combination {i}:'
-            position += 1
+        for i in range (0, len(self._combination_numbers)):
+            self._combination_numbers[i] = f'Combination {i+1}:'
         
         position = 0
         for key in (self._rooming_scores.keys()):
@@ -720,7 +726,8 @@ class ResultWindow(qtw.QWidget):
             self._room_labels[position] = label
             position += 1
         
-        for i in range(self.amount_of_combinations):
+
+        for i in range(len(self._combination_numbers)-1):
             self._ranking_rooms[self._combination_numbers[i]] = self._room_labels[i]
         
         self.combination_layout = qtw.QVBoxLayout()
@@ -746,7 +753,6 @@ class ResultWindow(qtw.QWidget):
         else:
             self._end_with = len(self._rooming_scores)
         
-        self._combination_no = 1
         
         self.create_combination_layout()
         
@@ -773,18 +779,16 @@ class ResultWindow(qtw.QWidget):
         self.setLayout(self.result_layout)
 
     def next_clicked(self):
-        if self._combination_no < len(self._rooming_scores):
-            for i in reversed(range(self.combination_layout.count())): 
-                self.combination_layout.itemAt(i).widget().setParent(None)
-
-            if self._end_with != len(self._rooming_scores) and (self._start_with + 10) < len(self._rooming_scores):
-                self._start_with = self._start_with + 10
+        for i in reversed(range(self.combination_layout.count())): 
+            self.combination_layout.itemAt(i).widget().setParent(None)
+        if self._end_with != len(self._rooming_scores) and (self._start_with + 10) < len(self._rooming_scores)-1:
+            self._start_with = self._start_with + 10
             
-            if (self._end_with + 10) < len(self._rooming_scores):
-                self._end_with = self._end_with + 10
-            else:
-                self._end_with = len(self._rooming_scores)
-            self.create_combination_layout()
+        if (self._end_with + 10) < len(self._rooming_scores):
+            self._end_with = self._end_with + 10
+        else:
+            self._end_with = len(self._rooming_scores)-1
+        self.create_combination_layout()
     
     def back_clicked(self):
         for i in reversed(range(self.combination_layout.count())): 
@@ -796,17 +800,10 @@ class ResultWindow(qtw.QWidget):
                 self._start_with = self._start_with - 10
         else:
             self._start_with = 0
-        if (self._start_with + 10) < len(self._rooming_scores):
+        if (self._start_with + 10) < len(self._rooming_scores)-1:
             self._end_with = self._start_with + 10
         else:
             self._end_with = self._start_with + (len(self._rooming_scores)%10)
-        if (self._combination_no - 20) > 1:
-            if self._combination_no % 10 == 0:
-                self._combination_no = self._combination_no - 20
-            else:
-                self._combination_no = self._combination_no - 15
-        else:
-            self._combination_no = 1
         self.create_combination_layout()
     
     def create_combination_layout(self):
@@ -832,11 +829,13 @@ class ResultWindow(qtw.QWidget):
         self.rooms_and_combination_ten = qtw.QPushButton(self._room_labels[self._start_with + 9])
         self.rooms_and_combination_ten.clicked.connect(self.combination_ten_clicked)
         
-        rooms_and_combination_buttons = [self.rooms_and_combination_one, self.rooms_and_combination_two, self.rooms_and_combination_three, self.rooms_and_combination_four, self.rooms_and_combination_five, self.rooms_and_combination_six, self.rooms_and_combination_seven, self.rooms_and_combination_eight, self.rooms_and_combination_nine, self.rooms_and_combination_ten]
+        rooms_and_combination_buttons = [self.rooms_and_combination_one, self.rooms_and_combination_two, self.rooms_and_combination_three, 
+                                         self.rooms_and_combination_four, self.rooms_and_combination_five, self.rooms_and_combination_six, 
+                                         self.rooms_and_combination_seven, self.rooms_and_combination_eight, self.rooms_and_combination_nine, 
+                                         self.rooms_and_combination_ten]
         
-        for button in rooms_and_combination_buttons:
-            if button.text() == "x":
-                rooms_and_combination_buttons.remove(button)
+        while rooms_and_combination_buttons[-1].text() == "x":
+            rooms_and_combination_buttons.pop()
         
         start = self._start_with
         for button in rooms_and_combination_buttons:
