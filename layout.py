@@ -21,7 +21,8 @@ def generate_all_combination(students, max_no_of_people):
 
 class Student:
 
-    def __init__(self, name, preferred_one, preferred_two, preferred_three, hated, is_weekly):
+    def __init__(self, name: str, preferred_one: str, preferred_two: str, 
+                 preferred_three: str, hated: str, is_weekly: bool):
         self._name = name
         self._preferred_one = preferred_one
         self._preferred_two = preferred_two
@@ -50,12 +51,11 @@ class Student:
     def is_weekly(self):
         return self._is_weekly
     
-    def __str__(self):
-        return str(self._name)
 
 class Rooming:
 
-    def __init__(self, student_in_yeargroup:list, unwanted_pairs:list, wanted_pairs:list, weekly_boarder_setting:str, amount_of_combinations: int):
+    def __init__(self, student_in_yeargroup:list, unwanted_pairs:list, wanted_pairs:list, 
+                 weekly_boarder_setting:str, amount_of_combinations: int):
         self._student_in_yeargroup = student_in_yeargroup
         self._unwanted_pairs = unwanted_pairs
         self._wanted_pairs = wanted_pairs
@@ -93,7 +93,7 @@ class Rooming:
             for i in range(start, len(rooms)):
                 have_existed = False
                 for existed_room in comb:
-                    if self._check_existed_poupil(rooms[i], existed_room):
+                    if self._check_existed_pupil(rooms[i], existed_room):
                         have_existed = True
                         break
                 if have_existed == False:
@@ -175,12 +175,8 @@ class Rooming:
 
     
     def _randomly_pick_combination(self):
-        result = []
-        if len(self._rooming_combinations) > 100000:
-            random_locations = random.sample(range(len(self._rooming_combinations)), (len(self._rooming_combinations)//2000))
-            for location in random_locations:
-                result.append(self._rooming_combinations[location])
-            self._rooming_combinations = result
+        if len(self._rooming_combinations) > 100000: 
+            self._rooming_combinations = random.sample(self._rooming_combinations, len(self._rooming_combinations)//2000)
             
 
     def _give_score_to_room(self,room:list):
@@ -241,8 +237,6 @@ class Rooming:
         return score
     
     def give_score_to_combinations(self,randomly_pick_room_on:bool):
-        if randomly_pick_room_on == True:
-            self._randomly_pick_combination()
         for combination in self._rooming_combinations:
             score = 0
             rooms_in_combination = []
@@ -254,7 +248,9 @@ class Rooming:
                         student_in_room.append(student.name())
                     rooms_in_combination.append(student_in_room)
             self._rooming_scores[str(rooms_in_combination)] = score
-            self._clean()
+        self._clean()
+        if randomly_pick_room_on == True:
+            self._randomly_pick_combination()
     
     def _clean(self):
 
@@ -938,7 +934,7 @@ class ResultWindow(qtw.QWidget):
 class EditWindow(qtw.QWidget):
     def __init__ (self,students, amount_of_one_man, amount_of_two_man, amount_of_three_man):
         
-        super(EditWindow, self).__init__()
+        super().__init__()
         self.setWindowTitle("Create Own Combination")
         
         self.amount_of_one_man_rooms = amount_of_one_man
