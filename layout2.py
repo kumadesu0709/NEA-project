@@ -236,49 +236,43 @@ class Rooming:
         return score
     
     def _clean(self):
-
-        rooming_scores_keys = (self._rooming_scores.copy()).keys()
-        if len(self._wanted_pairs) > 0 and len(self._unwanted_pairs) > 0:
-            for key in rooming_scores_keys:
-                combination = ast.literal_eval(key)
-                need_to_remove = True
-                for room in combination:
-                    for wanted_pair in self._wanted_pairs:
-                        for unwanted_pair in self._unwanted_pairs:
-                            if set(wanted_pair).issubset(set(room)) == True and set(unwanted_pair).issubset(set(room)) == False:
-                                need_to_remove = False
-                if need_to_remove == True:
-                    if key in self._rooming_scores.keys():
-                        self._rooming_scores.pop(key)
+        rooming_combinations = self._rooming_combinations.copy()
                         
-        elif len(self._wanted_pairs) > 0  and len(self._unwanted_pairs) == 0:
-            for key in rooming_scores_keys.keys():
-                combination = ast.literal_eval(key)
+        if len(self._wanted_pairs) > 0:
+            for combination in rooming_combinations:
                 need_to_remove = True
-                for room in combination:
-                    for wanted_pair in self._wanted_pairs:
-                        if set(wanted_pair).issubset(set(room)) == True:
-                            need_to_remove = False
+                for rooms in combination:
+                    for room in rooms:
+                        print(room)
+                        for wanted_pair in self._wanted_pairs:
+                            if len(room) == 2:
+                                    if set(wanted_pair).issubset(set([room[0].name(),room[1].name()])) == True:
+                                        need_to_remove = False
+                            if len(room) == 3:
+                                if set(wanted_pair).issubset(set([room[0].name(),room[1].name(),room[2].name()])) == True:
+                                    need_to_remove = False
                 if need_to_remove == True:
-                    if key in self._rooming_scores.keys():
-                        self._rooming_scores.pop(key)
+                    if combination in self._rooming_combinations:
+                        self._rooming_combinations.remove(combination)
         
-        elif len(self._unwanted_pairs) > 0 and len(self._wanted_pairs) == 0:
-            for key in rooming_scores_keys.keys():
-                combination = ast.literal_eval(key)
-                need_to_remove = True
-                for room in combination:
-                    for unwanted_pair in self._unwanted_pairs:
-                        if set(unwanted_pair).issubset(set(room)) == True:
-                            need_to_remove = False
+        if len(self._unwanted_pairs) > 0:
+            for combination in rooming_combinations:
+                need_to_remove = False
+                for rooms in combination:
+                    for room in rooms:
+                        for unwanted_pair in self._unwanted_pairs:
+                            if len(room) == 2:
+                                    if set(unwanted_pair).issubset(set([room[0].name(),room[1].name()])) == True:
+                                        need_to_remove = True
+                            if len(room) == 3:
+                                if set(unwanted_pair).issubset(set([room[0].name(),room[1].name(),room[2].name()])) == True:
+                                    need_to_remove = True
                 if need_to_remove == True:
-                    if key in self._rooming_scores.keys():
-                        self._rooming_scores.pop(key)
-
-        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
-        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
+                    if combination in self._rooming_combinations:
+                        self._rooming_combinations.remove(combination)
 
     def give_score_to_combinations(self,randomly_pick_room_on:bool):
+        self._clean()
         if randomly_pick_room_on == True:
             self._randomly_pick_combination()
         for combination in self._rooming_combinations:
@@ -292,7 +286,8 @@ class Rooming:
                         student_in_room.append(student.name())
                     rooms_in_combination.append(student_in_room)
             self._rooming_scores[str(rooms_in_combination)] = score
-        self._clean()
+        self._rooming_scores = dict(sorted(self._rooming_scores.items(), key=lambda item: item[1], reverse=True))
+        self._rooming_scores = {k: self._rooming_scores[k] for k in list(self._rooming_scores)[:self._amount_of_combinations]}
 
     def return_rooming(self):
         return self._rooming_combinations
