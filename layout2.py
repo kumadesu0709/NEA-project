@@ -621,11 +621,11 @@ class CheckIfUsePreviousSettingsWindow(qtw.QWidget):
         
         setting_string = 'Are you sure you want to use the previous settings? The previous setting is:\n'
         setting_string += 'wanted pair(s): '
-        for wanted_pair in ast.literal_eval(settings[0][:-1]):
+        for wanted_pair in ast.literal_eval(settings[1][:-1]):
             setting_string += f'{wanted_pair[0]} and {wanted_pair[1]}, '
         setting_string = f'{setting_string[:-2]}\n'
         setting_string += 'unwanted pair(s): '
-        for unwanted_pair in ast.literal_eval(settings[1][:-1]):
+        for unwanted_pair in ast.literal_eval(settings[0][:-1]):
             setting_string += f'{unwanted_pair[0]} and {unwanted_pair[1]}, '
         setting_string = f'{setting_string[:-2]}\n'
         setting_string += f'What to do with weekly boarders: {settings[2][:-1]}\n'
