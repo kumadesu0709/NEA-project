@@ -4,7 +4,7 @@ import ast
 import random
 
 
-wb = load_workbook("/Users/jamesguan/Desktop/CS A level NEA/NEA testing (2).xlsx")
+wb = load_workbook("/Users/jamesguan/Downloads/NEA testing (2).xlsx")
 ws = wb.active
 
 def generate_all_combination(students, max_no_of_people):
@@ -74,6 +74,7 @@ class Rooming:
         if self._weekly_boarders_setting == "Put all the weekly boarders into the same room":
             if len(self._weekly_boarders) <= 3:
                 self._wanted_pairs.append([self._weekly_boarders])
+                print(self._wanted_pairs)
         elif self._weekly_boarders_setting == "Pair each of them with a full boarder":
             for i in range (len(self._weekly_boarders)):
                 for j in range (i+1, len(self._weekly_boarders)):
